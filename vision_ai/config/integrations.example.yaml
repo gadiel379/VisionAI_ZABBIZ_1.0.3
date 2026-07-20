@@ -1,0 +1,28 @@
+security:
+  username: ''
+  password_hash: ''
+telegram:
+  enabled: false
+  chat_id: ''
+  token: ''
+  channel_id_enabled: false
+  morning_enabled: false
+  morning_time: '06:00'
+  afternoon_enabled: false
+  afternoon_time: '17:00'
+snmp:
+  enabled: false
+  zabbix_server: ''
+  agent_port: 161
+  trap_port: 162
+  community: ''
+  long_event_seconds: 60.0
+vpn:
+  zerotier:
+    enabled: false
+    network_id: ''
+    device_name: raspberrypi-vision-ai
+  wireguard:
+    enabled: false
+    interface: wg0
+    config_path: /etc/wireguard/wg0.conf

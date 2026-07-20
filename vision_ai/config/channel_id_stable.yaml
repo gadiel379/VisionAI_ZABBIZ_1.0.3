@@ -1,0 +1,23 @@
+enabled: true
+capture_id: capture_1
+capture_config_path: config/templates/capture_1/config.yaml
+channels:
+  '2.1': RED2
+  '2.2': FORO
+  '5.1': RED5
+  '9.1': NU9VE
+supported_virtual_channels:
+- '2.1'
+- '2.2'
+- '5.1'
+- '9.1'
+confirmation_seconds: 0.75
+disappearance_seconds: 2.0
+minimum_score: 65.0
+processing_interval_seconds: 1.0
+roi_x: 0
+roi_y: 0
+roi_width: 320
+roi_height: 100
+minimum_magenta_ratio: 0.22
+minimum_white_ratio: 0.008

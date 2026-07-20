@@ -1,0 +1,10 @@
+Copyright (c) 2026 Gadiel Aminadab Ortiz Gutierrez.
+Todos los derechos reservados.
+
+Este repositorio se publica para consulta, evaluación e instalación del
+sistema Vision AI. La publicación no concede autorización para vender,
+relicenciar o presentar el proyecto como desarrollo propio.
+
+Los componentes de terceros conservan sus respectivas licencias. En
+particular, web/static/hls.min.js se distribuye bajo la licencia incluida en
+web/static/HLS_JS_LICENSE.txt.

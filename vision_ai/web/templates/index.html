@@ -1,0 +1,671 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Monitor de Señales</title>
+<link rel="icon" type="image/png" href="/static/favicon.png?v=1.0.3">
+<style>
+:root{--bg:#06111d;--panel:#0d1b2a;--panel2:#112337;--line:#263b50;--text:#eef5ff;--muted:#91a4b9;--blue:#2d83ff;--cyan:#18cff4;--green:#31d76a;--purple:#9754f6;--red:#ef3f4f;--orange:#f28b20}
+*{box-sizing:border-box}body{margin:0;background:linear-gradient(135deg,#06111d,#0a1928 55%,#07121e);color:var(--text);font-family:Arial,Helvetica,sans-serif}.app{min-height:100vh;display:grid;grid-template-columns:245px 1fr}.sidebar{position:sticky;top:0;height:100vh;padding:22px 14px 18px;border-right:1px solid var(--line);background:rgba(5,16,28,.92);display:flex;flex-direction:column}.brand{padding:0 10px 24px;border-bottom:1px solid var(--line);text-align:center}.brand-icon{width:58px;height:58px;margin:auto;color:var(--cyan)}.brand h1{font-size:17px;margin:10px 0 7px}.brand small{font-size:11px;color:var(--muted)}.nav{display:grid;gap:7px;margin-top:22px}.nav button{display:flex;align-items:center;gap:13px;padding:15px;border:0;border-radius:7px;background:#0d1c2b;color:#d6e0eb;text-align:left;font-size:15px;cursor:pointer}.nav button.active,.nav button:hover{background:linear-gradient(90deg,#225ebd,#2d83ff);color:#fff}.icon{width:27px;height:27px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:0 0 auto}.sidebar-bottom{margin-top:auto}.power-actions{display:grid;gap:10px;margin-bottom:18px}.power-btn{display:flex;align-items:center;gap:13px;padding:13px;border:0;border-radius:7px;color:#fff;font-weight:700;text-align:left;cursor:pointer}.power-btn small{display:block;margin-top:3px;font-weight:400}.power-btn.reboot{background:linear-gradient(180deg,#1676db,#1154a8)}.power-btn.shutdown{background:linear-gradient(180deg,#dc2e3b,#aa1925)}.version{padding:14px 8px 0;border-top:1px solid var(--line);color:var(--muted);font-size:13px;line-height:2}.green-dot{display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--green);margin-right:7px}.main{min-width:0}.topbar{padding:20px 25px 16px;display:flex;align-items:flex-start;justify-content:space-between;gap:20px}.page-title h2{font-size:28px;margin:0 0 7px}.page-title p{margin:0;color:var(--muted)}.top-metrics{display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end}.metric{min-width:132px;padding:11px 14px;border:1px solid var(--line);border-radius:8px;background:rgba(11,27,43,.82)}.metric b{display:block;color:var(--muted);font-size:12px;margin-bottom:5px}.metric span{font-size:19px;font-weight:700}.metric-bar{height:6px;margin-top:7px;border-radius:5px;background:#17283a;overflow:hidden}.metric-bar i{display:block;height:100%;width:0;background:var(--blue)}.content{padding:0 25px 25px}.page{display:none}.page.active{display:block}.capture-card{margin-bottom:16px;border:1px solid var(--line);border-radius:9px;background:rgba(10,26,42,.76);overflow:hidden}.capture-head{display:flex;align-items:center;gap:10px;padding:14px 18px;border-bottom:1px solid var(--line);font-weight:700}.state-live{color:var(--green);font-size:13px}.capture-layout{display:grid;grid-template-columns:minmax(420px,1.65fr) 245px 320px;gap:0}.video-column,.audio-column,.info-column{padding:10px}.audio-column,.info-column{border-left:1px solid var(--line)}.video-shell{position:relative;aspect-ratio:16/9;background:#02070c;border:1px solid #284055;border-radius:7px;overflow:hidden}.video-shell img{width:100%;height:100%;object-fit:contain;display:block}.video-watermark{position:absolute;top:12px;right:14px;text-align:right;text-shadow:0 1px 4px #000;font-size:15px;line-height:1.45}.live-badge{position:absolute;left:12px;top:12px;display:flex;align-items:center;gap:7px;font-size:13px}.red-dot{width:10px;height:10px;border-radius:50%;background:var(--red)}.video-disabled{display:none;position:absolute;inset:0;align-items:center;justify-content:center;text-align:center;background:#07111d;color:var(--muted);font-weight:700}.video-disabled.show{display:flex}.player-controls{display:flex;align-items:center;gap:15px;padding:10px 5px 3px;color:#dce8f5}.player-controls button{border:0;background:transparent;color:inherit;cursor:pointer;padding:0}.player-controls .spacer{margin-left:auto}.audio-title,.info-title{padding:5px 7px 13px;border-bottom:1px solid var(--line);font-weight:700}.audio-meters{height:305px;display:flex;align-items:center;justify-content:center;gap:35px;padding:18px}.meter-box{text-align:center}.meter-box h4{font-size:13px;margin:0 0 12px}.vertical-meter{position:relative;width:38px;height:220px;border:1px solid #355068;border-radius:5px;background:repeating-linear-gradient(to top,#0d1a28 0,#0d1a28 19px,#203248 20px);overflow:hidden}.meter-fill{position:absolute;left:7px;right:7px;bottom:7px;height:0;border-radius:2px;background:linear-gradient(to top,#31c34b 0 55%,#d9de27 55% 78%,#f58c16 78% 92%,#ef432d 92%)}.meter-scale{position:absolute;left:-35px;top:0;height:100%;display:flex;flex-direction:column;justify-content:space-between;color:var(--muted);font-size:10px}.meter-db{margin-top:7px;font-size:12px}.audio-button{width:100%;padding:10px;border:1px solid #355068;border-radius:6px;background:#14263a;color:#fff;cursor:pointer}.info-list{padding:10px 8px}.info-item{display:grid;grid-template-columns:32px 1fr;gap:8px;padding:10px 0;border-bottom:1px solid rgba(38,59,80,.65)}.info-item:last-child{border-bottom:0}.info-item .label{font-size:12px;color:var(--muted);margin-bottom:4px}.info-item .value{font-size:15px}.status-pill{display:inline-block;padding:4px 10px;border-radius:14px;background:#1b7437;color:#caffd5}.config-panel,.general-panel{border:1px solid var(--line);border-radius:9px;background:rgba(10,26,42,.76);overflow:hidden}.tabs{display:flex;border-bottom:1px solid var(--line);padding:0 14px}.tab{padding:17px 30px;border:0;border-bottom:3px solid transparent;background:transparent;color:#c9d5e2;font-weight:700;cursor:pointer}.tab.active{color:var(--blue);border-bottom-color:var(--blue)}.tab-page{display:none;padding:18px}.tab-page.active{display:block}.grid-2,.general-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}.card{padding:20px;border:1px solid var(--line);border-radius:8px;background:linear-gradient(145deg,#102236,#0b1b2b)}.card h3{margin:0 0 18px;color:var(--blue);font-size:15px}.card.purple h3{color:var(--purple)}.card.green h3{color:var(--green)}.form-row{display:grid;grid-template-columns:155px 1fr;gap:12px;align-items:center;margin-bottom:12px}.form-row input,.form-row select{width:100%;padding:10px;border:1px solid #3a5067;border-radius:5px;background:#14263a;color:#fff}.switch{position:relative;width:44px;height:24px}.switch input{display:none}.slider{position:absolute;inset:0;border-radius:20px;background:#566273}.slider:before{content:"";position:absolute;width:18px;height:18px;left:3px;top:3px;border-radius:50%;background:#fff;transition:.2s}.switch input:checked+.slider{background:#2bc65f}.switch input:checked+.slider:before{transform:translateX(20px)}.save-btn{width:100%;margin-top:10px;padding:12px;border:0;border-radius:6px;background:linear-gradient(90deg,#178f47,#2bbf65);color:#fff;font-weight:700;cursor:pointer}.message{display:none;margin-top:12px;padding:10px;border-radius:6px}.message.ok{display:block;background:rgba(45,223,139,.14);color:#90f4bd}.message.error{display:block;background:rgba(232,63,77,.15);color:#ffadb4}.general-grid{padding:18px}.uptime-layout{display:grid;grid-template-columns:230px 1fr;gap:15px;align-items:center}.big-time{font-size:28px;margin:14px 0}.status-chip{display:inline-block;padding:5px 9px;border-radius:5px;background:#29583f;color:#a9ffd0;font-size:12px}.status-chip.off{background:#4a515d;color:#e5e8ed}.chart{width:100%;height:125px;border-left:1px solid #24384c;border-bottom:1px solid #24384c}.chart polyline{fill:none;stroke:var(--blue);stroke-width:3}.chart.purple polyline{stroke:var(--purple)}.chart.green polyline{stroke:var(--green)}.resource-layout{display:grid;grid-template-columns:160px 1fr;gap:24px;align-items:center}.donut{--value:0;width:140px;height:140px;border-radius:50%;background:conic-gradient(var(--blue) calc(var(--value)*1%),#233244 0);display:grid;place-items:center}.donut.purple{background:conic-gradient(var(--purple) calc(var(--value)*1%),#233244 0)}.donut:after{content:"";width:102px;height:102px;border-radius:50%;background:#102030}.donut-wrap{position:relative;display:grid;place-items:center}.donut-center{position:absolute;text-align:center}.donut-value{font-size:26px;font-weight:700}.details{display:grid;gap:13px}.details div{display:flex;justify-content:space-between}.temp-value{font-size:41px;color:var(--green);font-weight:700}.modal{display:none;position:fixed;inset:0;z-index:20;background:rgba(0,0,0,.72);align-items:center;justify-content:center}.modal.show{display:flex}.modal-box{width:min(420px,calc(100% - 30px));padding:24px;border:1px solid #3b4d62;border-radius:10px;background:#101d2b}.modal-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:22px}.modal-actions button{padding:10px 15px;border:0;border-radius:5px;color:#fff;cursor:pointer}.cancel{background:#4b596a}.confirm{background:var(--red)}
+@media(max-width:1200px){.capture-layout{grid-template-columns:1fr 220px}.info-column{grid-column:1/-1;border-left:0;border-top:1px solid var(--line)}.info-list{display:grid;grid-template-columns:repeat(3,1fr);gap:0 20px}.top-metrics{display:none}}@media(max-width:850px){.app{grid-template-columns:1fr}.sidebar{position:static;height:auto}.capture-layout,.grid-2,.general-grid,.uptime-layout,.resource-layout{grid-template-columns:1fr}.audio-column{border-left:0;border-top:1px solid var(--line)}.audio-meters{height:270px}.sidebar-bottom{margin-top:20px}}
+
+/* =========================================================
+   AJUSTE DASHBOARD V2
+   - Dos capturadoras visibles dentro de una sola pantalla
+   - Conserva todos los iconos y funciones existentes
+   - Tarjetas con la misma altura
+   ========================================================= */
+
+#dashboardPage.active{
+    display:grid;
+    grid-template-rows:repeat(2,minmax(0,1fr));
+    gap:10px;
+    height:calc(100vh - 118px);
+    min-height:650px;
+    overflow:hidden;
+}
+
+#dashboardPage .capture-card{
+    min-height:0;
+    height:100%;
+    margin-bottom:0;
+    display:flex;
+    flex-direction:column;
+}
+
+#dashboardPage .capture-head{
+    flex:0 0 auto;
+    padding:8px 12px;
+    font-size:12px;
+}
+
+#dashboardPage .capture-layout{
+    flex:1 1 auto;
+    min-height:0;
+    display:grid;
+    grid-template-columns:minmax(360px,1fr) 170px 245px;
+}
+
+#dashboardPage .video-column{
+    min-width:0;
+    min-height:0;
+    padding:6px;
+    display:flex;
+    flex-direction:column;
+}
+
+#dashboardPage .video-shell{
+    flex:1 1 auto;
+    min-height:0;
+    aspect-ratio:auto;
+}
+
+#dashboardPage .video-shell img{
+    width:100%;
+    height:100%;
+    object-fit:contain;
+}
+
+#dashboardPage .player-controls{
+    flex:0 0 29px;
+    padding:5px 4px 0;
+    gap:10px;
+    font-size:12px;
+}
+
+#dashboardPage .player-controls .icon{
+    width:20px;
+    height:20px;
+}
+
+#dashboardPage .audio-column,
+#dashboardPage .info-column{
+    min-width:0;
+    min-height:0;
+    padding:6px;
+    overflow:hidden;
+}
+
+#dashboardPage .audio-title,
+#dashboardPage .info-title{
+    padding:3px 5px 7px;
+    font-size:12px;
+}
+
+#dashboardPage .audio-meters{
+    height:calc(100% - 72px);
+    min-height:0;
+    gap:18px;
+    padding:8px 8px 4px;
+}
+
+#dashboardPage .meter-box h4{
+    margin:0 0 5px;
+    font-size:10px;
+}
+
+#dashboardPage .vertical-meter{
+    width:31px;
+    height:min(185px,72%);
+    min-height:105px;
+}
+
+#dashboardPage .meter-db{
+    margin-top:3px;
+    font-size:10px;
+}
+
+#dashboardPage .audio-button{
+    padding:6px;
+    font-size:10px;
+}
+
+#dashboardPage .info-list{
+    padding:4px 5px;
+}
+
+#dashboardPage .info-item{
+    grid-template-columns:24px 1fr;
+    gap:5px;
+    padding:5px 0;
+}
+
+#dashboardPage .info-item .icon{
+    width:19px;
+    height:19px;
+}
+
+#dashboardPage .info-item .label{
+    margin-bottom:1px;
+    font-size:9px;
+}
+
+#dashboardPage .info-item .value{
+    font-size:11px;
+}
+
+#dashboardPage .status-pill{
+    padding:2px 7px;
+    font-size:10px;
+}
+
+#dashboardPage .video-watermark{
+    top:8px;
+    right:9px;
+    font-size:11px;
+    line-height:1.3;
+}
+
+#dashboardPage .live-badge{
+    top:8px;
+    left:9px;
+    font-size:10px;
+}
+
+#dashboardPage .red-dot{
+    width:7px;
+    height:7px;
+}
+
+@media(max-width:1450px){
+    #dashboardPage .capture-layout{
+        grid-template-columns:minmax(320px,1fr) 150px 215px;
+    }
+
+    #dashboardPage .audio-meters{
+        gap:12px;
+    }
+}
+
+@media(max-height:820px){
+    #dashboardPage.active{
+        height:calc(100vh - 103px);
+        min-height:560px;
+        gap:7px;
+    }
+
+    .topbar{
+        padding-top:10px;
+        padding-bottom:9px;
+    }
+
+    .page-title h2{
+        font-size:22px;
+    }
+
+    #dashboardPage .vertical-meter{
+        height:min(145px,68%);
+        min-height:90px;
+    }
+}
+
+
+
+/* EVENTOS E INTEGRACIONES */
+.events-stack{display:grid;gap:16px}.events-section{border:1px solid var(--line);border-radius:9px;background:rgba(10,26,42,.82);overflow:hidden}.events-section.blue{border-color:#1d75bf}.events-section.green{border-color:#2b8c46}.events-section-title{padding:14px 17px;border-bottom:1px solid var(--line);font-weight:700;color:var(--blue)}.events-section.green .events-section-title{color:var(--green)}.events-toolbar{display:flex;gap:10px;align-items:center;justify-content:space-between;padding:11px 14px;border-bottom:1px solid var(--line)}.events-toolbar select,.events-toolbar input{padding:8px 10px;border:1px solid #39516a;border-radius:5px;background:#102337;color:#fff}.events-table-wrap{overflow:auto}.events-table{width:100%;border-collapse:collapse;min-width:850px}.events-table th,.events-table td{padding:11px 14px;border-bottom:1px solid rgba(38,59,80,.75);text-align:left;font-size:13px}.events-table th{background:#172636;color:#dce7f3}.event-type{display:flex;align-items:center;gap:9px;font-weight:700}.event-dot{width:12px;height:12px;border-radius:50%;background:var(--red)}.event-dot.freeze{background:#f4b72c}.event-dot.black{background:#8b98a7}.event-dot.channel_id{background:var(--blue)}.event-dot.artifact{background:var(--purple)}.view-btn,.download-btn{display:inline-flex;align-items:center;gap:6px;padding:7px 10px;border:0;border-radius:5px;background:#1553a8;color:#fff;cursor:pointer;text-decoration:none}.delivery-ok{color:#74e595}.delivery-fail{color:#ff737e}.delivery-pending{color:#f7c968}.media-modal-box{width:min(920px,calc(100% - 28px));max-height:90vh;overflow:auto;padding:0;border:1px solid #3b4d62;border-radius:10px;background:#0c1a29}.media-modal-head{display:flex;align-items:center;justify-content:space-between;padding:15px 18px;border-bottom:1px solid var(--line)}.media-modal-head button{border:0;background:transparent;color:#fff;font-size:25px;cursor:pointer}.media-modal-body{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(260px,.6fr);gap:18px;padding:18px}.media-preview{min-height:260px;display:flex;align-items:center;justify-content:center;border:1px solid var(--line);border-radius:7px;background:#02070c;overflow:hidden}.media-preview video,.media-preview img{display:block;max-width:100%;max-height:62vh}.event-detail-list{display:grid;gap:12px}.event-detail-row{padding-bottom:10px;border-bottom:1px solid var(--line)}.event-detail-row small{display:block;color:var(--muted);margin-bottom:4px}.integration-note{margin:0 0 16px;padding:12px;border:1px solid #39516a;border-radius:6px;background:#102337;color:#c8d6e4}.auth-block{margin-top:18px;padding:16px;border:1px solid #76572b;border-radius:7px;background:rgba(128,86,25,.12)}.auth-block h4{margin:0 0 12px;color:#f4c96b}.secret-input{font-family:monospace}.compact-actions{display:flex;gap:10px;justify-content:flex-end}.snmp-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.empty-state{padding:28px;text-align:center;color:var(--muted)}
+.events-pagination{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 14px;border-top:1px solid var(--line);background:#0b1c2c;color:var(--muted);font-size:13px}.pagination-buttons{display:flex;align-items:center;gap:6px;flex-wrap:wrap;justify-content:flex-end}.pagination-button{min-width:34px;height:32px;padding:0 10px;border:1px solid #39516a;border-radius:5px;background:#102337;color:#dce7f3;cursor:pointer}.pagination-button:hover:not(:disabled),.pagination-button.active{border-color:var(--blue);background:#1553a8;color:#fff}.events-section.green .pagination-button:hover:not(:disabled),.events-section.green .pagination-button.active{border-color:var(--green);background:#237743}.pagination-button:disabled{opacity:.4;cursor:not-allowed}.pagination-ellipsis{padding:0 3px;color:var(--muted)}
+@media(max-width:900px){.media-modal-body,.snmp-grid{grid-template-columns:1fr}}
+@media(max-width:700px){.events-pagination{align-items:flex-start;flex-direction:column}.pagination-buttons{justify-content:flex-start}}
+
+
+.refresh-interface-btn{width:52px;height:52px;border:1px solid var(--line);border-radius:9px;background:rgba(16,31,47,.95);color:var(--blue);display:grid;place-items:center;cursor:pointer;transition:.2s;flex:0 0 auto}.refresh-interface-btn:hover{transform:rotate(18deg);border-color:var(--blue);background:#132a42}.refresh-interface-btn.loading svg{animation:spin .8s linear infinite}@keyframes spin{to{transform:rotate(360deg)}}
+.video-shell video{width:100%;height:100%;object-fit:contain;display:block;background:#02070c}
+
+/* Créditos del sistema: ajuste visual aislado */
+.version{line-height:normal}.version-trigger{width:100%;display:flex;align-items:center;gap:7px;padding:8px;border:1px solid transparent;border-radius:6px;background:transparent;color:var(--muted);font:inherit;cursor:pointer;text-align:left}.version-trigger:hover,.version-trigger:focus-visible{border-color:#35516a;background:#0d1c2b;color:#e4edf6;outline:none}.version-trigger .green-dot{flex:0 0 auto;margin-right:0}.version-trigger .version-text{white-space:nowrap}.version-trigger .zabbix-footer-logo{width:68px;height:18px;margin-left:auto;object-fit:contain;display:block}.version-copyright{padding:5px 8px 0;line-height:1.5}.about-box{width:min(590px,calc(100% - 30px));padding:0;border:1px solid #3b536b;border-radius:12px;background:linear-gradient(145deg,#102236,#0b1b2b);box-shadow:0 18px 45px rgba(0,0,0,.55);overflow:hidden}.about-head{display:flex;align-items:center;gap:18px;padding:18px 28px;border-bottom:1px solid var(--line);background:#0d1c2b}.about-head img{width:92px;height:25px;object-fit:contain}.about-head h3{margin:0;font-size:18px}.about-close{margin-left:auto;width:31px;height:31px;border:0;border-radius:50%;background:#172a3d;color:#b7c6d5;font-size:21px;cursor:pointer}.about-content{padding:25px 34px 29px}.about-row{padding:0 0 18px;margin-bottom:18px;border-bottom:1px solid var(--line)}.about-row:last-of-type{margin-bottom:22px}.about-label{margin-bottom:8px;color:#738da5;font-size:12px;font-weight:700;letter-spacing:.6px}.about-value{color:#dce6f0;font-size:15px;line-height:1.55}.about-value.developer{color:#f2f6fa;font-size:16px;font-weight:700}.about-version{text-align:center;padding:11px;border:1px solid #28506b;border-radius:6px;background:#11283b;color:#69d9f3;font-size:12px}@media(max-width:520px){.version-trigger .zabbix-footer-logo{width:58px}.about-head{padding:16px 18px;gap:12px}.about-head img{width:78px}.about-head h3{font-size:16px}.about-content{padding:21px 20px}}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute"><defs>
+<symbol id="i-monitor" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="13" rx="2"/><path d="M8 21h8M12 17v4"/><path d="m10 8 5 3-5 3z"/></symbol>
+<symbol id="i-grid" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></symbol>
+<symbol id="i-bell" viewBox="0 0 24 24"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/><path d="M10 21h4"/></symbol>
+<symbol id="i-gear" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1-2.8 2.8-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.6V21h-4v-.1a1.7 1.7 0 0 0-1-1.6 1.7 1.7 0 0 0-1.9.3l-.1.1L4.2 17l.1-.1a1.7 1.7 0 0 0 .3-1.9A1.7 1.7 0 0 0 3 14H3v-4h.1a1.7 1.7 0 0 0 1.6-1 1.7 1.7 0 0 0-.3-1.9l-.1-.1L7 4.2l.1.1a1.7 1.7 0 0 0 1.9.3A1.7 1.7 0 0 0 10 3V3h4v.1a1.7 1.7 0 0 0 1 1.6 1.7 1.7 0 0 0 1.9-.3l.1-.1L19.8 7l-.1.1a1.7 1.7 0 0 0-.3 1.9 1.7 1.7 0 0 0 1.6 1h.1v4H21a1.7 1.7 0 0 0-1.6 1z"/></symbol>
+<symbol id="i-chart" viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/><path d="m4 8 5-4 6 5 6-6"/></symbol>
+<symbol id="i-refresh" viewBox="0 0 24 24"><path d="M20 6v5h-5"/><path d="M4 18v-5h5"/><path d="M18.5 9A7 7 0 0 0 6 6l-2 2M5.5 15A7 7 0 0 0 18 18l2-2"/></symbol>
+<symbol id="i-power" viewBox="0 0 24 24"><path d="M12 2v10"/><path d="M6.4 5.6a8 8 0 1 0 11.2 0"/></symbol>
+<symbol id="i-volume" viewBox="0 0 24 24"><path d="M11 5 6 9H3v6h3l5 4z"/><path d="M15 9a4 4 0 0 1 0 6M18 6a8 8 0 0 1 0 12"/></symbol>
+<symbol id="i-camera" viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="14" rx="2"/><circle cx="12" cy="13" r="4"/><path d="m8 6 1-2h6l1 2"/></symbol>
+<symbol id="i-full" viewBox="0 0 24 24"><path d="M8 3H3v5M16 3h5v5M8 21H3v-5M16 21h5v-5"/></symbol>
+<symbol id="i-device" viewBox="0 0 24 24"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M9 7h6M9 17h6"/></symbol>
+<symbol id="i-pin" viewBox="0 0 24 24"><path d="M20 10c0 5-8 11-8 11S4 15 4 10a8 8 0 1 1 16 0z"/><circle cx="12" cy="10" r="2"/></symbol>
+
+<symbol id="i-eye" viewBox="0 0 24 24"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></symbol>
+<symbol id="i-download" viewBox="0 0 24 24"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M4 21h16"/></symbol>
+<symbol id="i-telegram" viewBox="0 0 24 24"><path d="m21 3-7.6 18-4.2-7.2L3 10.8z"/><path d="m9.2 13.8 4.6-4.2"/></symbol>
+<symbol id="i-network" viewBox="0 0 24 24"><circle cx="12" cy="5" r="2"/><circle cx="5" cy="19" r="2"/><circle cx="19" cy="19" r="2"/><path d="M12 7v5M5 17v-3h14v3"/></symbol>
+<symbol id="i-lock" viewBox="0 0 24 24"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></symbol>
+<symbol id="i-image" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8" cy="9" r="2"/><path d="m21 15-5-5L5 20"/></symbol>
+</defs></svg>
+<div class="app">
+<aside class="sidebar">
+<div class="brand"><svg class="brand-icon icon"><use href="#i-monitor"/></svg><h1>MONITOR DE SEÑALES</h1><small>TV Digital</small></div>
+<nav class="nav">
+<button id="dashboardNav" class="active" onclick="openPage('dashboardPage','dashboardNav','DASHBOARD','Vista en vivo')"><svg class="icon"><use href="#i-grid"/></svg>Dashboard</button>
+<button id="eventsNav" onclick="openEventsPage()"><svg class="icon"><use href="#i-bell"/></svg>Eventos</button>
+<button id="configNav" onclick="openPage('configPage','configNav','Configuración del Sistema','Configure las capturadoras, canales y parámetros de red')"><svg class="icon"><use href="#i-gear"/></svg>Configuración</button>
+<button id="generalNav" onclick="openPage('generalPage','generalNav','Estado General del Sistema','Recursos y tiempo activo de las capturadoras')"><svg class="icon"><use href="#i-chart"/></svg>General</button>
+</nav>
+<div class="sidebar-bottom"><div class="power-actions">
+<button class="power-btn reboot" onclick="openPowerModal('reboot')"><svg class="icon"><use href="#i-refresh"/></svg><span>REINICIAR<small>Raspberry Pi</small></span></button>
+<button class="power-btn shutdown" onclick="openPowerModal('shutdown')"><svg class="icon"><use href="#i-power"/></svg><span>APAGAR<small>Raspberry Pi</small></span></button>
+</div><div class="version"><button class="version-trigger" type="button" onclick="openAboutModal()" aria-label="Acerca del sistema"><span class="green-dot"></span><span class="version-text">Versión: 1.0.3</span><img class="zabbix-footer-logo" src="/static/Zabbix_logo.svg" alt="Zabbix"></button><div class="version-copyright">© 2026 Monitor TV</div></div></div>
+</aside>
+<main class="main">
+<header class="topbar"><div class="page-title"><h2 id="pageTitle">DASHBOARD</h2><p id="pageDescription">Vista en vivo</p></div><div class="top-metrics">
+<div class="metric"><b>CPU</b><span id="topCpu">0%</span><div class="metric-bar"><i id="cpuBar"></i></div></div>
+<div class="metric"><b>RAM</b><span id="topRam">0%</span><div class="metric-bar"><i id="ramBar" style="background:var(--purple)"></i></div></div>
+<div class="metric"><b>DISCO</b><span id="topDisk">0%</span><div class="metric-bar"><i id="diskBar"></i></div></div>
+<div class="metric"><b>HORA</b><span id="clock">--:--:--</span><div id="date" style="color:var(--muted);font-size:12px;margin-top:5px"></div></div>
+<button id="refreshInterfaceButton" class="refresh-interface-btn" onclick="refreshInterface()" title="Refrescar interfaz" aria-label="Refrescar interfaz"><svg class="icon"><use href="#i-refresh"/></svg></button>
+</div></header>
+<section class="content">
+<div id="dashboardPage" class="page active">
+<div id="captureCard1" class="capture-card"><div class="capture-head">CAPTURADORA 1 <span class="green-dot"></span><span id="capture1State" class="state-live">INICIANDO</span></div><div class="capture-layout">
+<div class="video-column"><div id="videoShell1" class="video-shell"><video id="video1" autoplay muted playsinline preload="auto"></video><div class="live-badge"><span class="red-dot"></span>EN VIVO A/V</div><div id="disabled1" class="video-disabled">CAPTURADORA 1 DESHABILITADA</div></div><div class="player-controls"><button id="playButton" onclick="toggleVideo()">❚❚</button><button onclick="toggleAudio()"><svg class="icon"><use href="#i-volume"/></svg></button><span><span class="green-dot"></span>LIVE</span><span class="spacer"></span><button onclick="snapshot()"><svg class="icon"><use href="#i-camera"/></svg></button><button onclick="fullscreenVideo('videoShell1')"><svg class="icon"><use href="#i-full"/></svg></button></div></div>
+<div class="audio-column"><div class="audio-title">AUDIO</div><div class="audio-meters"><div class="meter-box"><h4>Audio 1<br>(Izquierdo)</h4><div class="vertical-meter"><div class="meter-scale"><span>0</span><span>-10</span><span>-20</span><span>-30</span><span>-40</span><span>-50</span><span>-60</span></div><div id="meterLeft" class="meter-fill"></div></div><div id="dbLeft" class="meter-db">-60 dB</div></div><div class="meter-box"><h4>Audio 2<br>(Derecho)</h4><div class="vertical-meter"><div id="meterRight" class="meter-fill"></div></div><div id="dbRight" class="meter-db">-60 dB</div></div></div><button id="audioButton" class="audio-button" onclick="toggleAudio()">ESCUCHAR AUDIO</button></div>
+<div class="info-column"><div class="info-title">INFORMACIÓN DEL CANAL</div><div id="info1" class="info-list"></div></div>
+</div></div>
+<div id="captureCard2" class="capture-card"><div class="capture-head">CAPTURADORA 2 <span class="green-dot"></span><span id="capture2State" class="state-live">DESHABILITADA</span></div><div class="capture-layout">
+<div class="video-column"><div id="videoShell2" class="video-shell"><video id="video2" autoplay muted playsinline preload="auto"></video><div class="live-badge"><span class="red-dot"></span>EN VIVO A/V</div><div id="disabled2" class="video-disabled show">CAPTURADORA 2 DESHABILITADA</div></div><div class="player-controls"><button id="playButton2" onclick="toggleVideo(2)">❚❚</button><button onclick="toggleAudio(2)"><svg class="icon"><use href="#i-volume"/></svg></button><span><span class="green-dot"></span>LIVE</span><span class="spacer"></span><button onclick="snapshot(2)"><svg class="icon"><use href="#i-camera"/></svg></button><button onclick="fullscreenVideo('videoShell2')"><svg class="icon"><use href="#i-full"/></svg></button></div></div>
+<div class="audio-column"><div class="audio-title">AUDIO</div><div class="audio-meters"><div class="meter-box"><h4>Audio 1<br>(Izquierdo)</h4><div class="vertical-meter"><div id="meterLeft2" class="meter-fill"></div></div><div id="dbLeft2" class="meter-db">-60 dB</div></div><div class="meter-box"><h4>Audio 2<br>(Derecho)</h4><div class="vertical-meter"><div id="meterRight2" class="meter-fill"></div></div><div id="dbRight2" class="meter-db">-60 dB</div></div></div><button id="audioButton2" class="audio-button" onclick="toggleAudio(2)">ESCUCHAR AUDIO</button></div>
+<div class="info-column"><div class="info-title">INFORMACIÓN DEL CANAL</div><div id="info2" class="info-list"></div></div>
+</div></div>
+</div>
+
+<div id="eventsPage" class="page">
+  <div class="events-stack">
+    <section class="events-section blue">
+      <div class="events-section-title">1) EVENTOS DE FALLA E IDENTIFICACIONES</div>
+      <div class="events-toolbar"><span>Clips de fallas y capturas de identificación</span><select id="eventTypeFilter" onchange="setMediaPage(1)"><option value="all">Todos</option><option value="failure">Fallas con clip</option><option value="identification">Identificaciones</option></select></div>
+      <div class="events-table-wrap"><table class="events-table"><thead><tr><th>Tipo de evento</th><th>Canal</th><th>Fecha y hora</th><th>Duración</th><th>Evidencia</th></tr></thead><tbody id="eventsMediaBody"></tbody></table></div>
+      <div id="eventsMediaPagination" class="events-pagination"></div>
+    </section>
+    <section class="events-section green">
+      <div class="events-section-title">2) EVENTOS ENVIADOS A TELEGRAM Y ZABBIX</div>
+      <div class="events-table-wrap"><table class="events-table"><thead><tr><th>Tipo de alarma</th><th>Canal</th><th>Fecha y hora</th><th>Duración</th><th>Telegram</th><th>Zabbix</th></tr></thead><tbody id="eventsDeliveryBody"></tbody></table></div>
+      <div id="eventsDeliveryPagination" class="events-pagination"></div>
+    </section>
+  </div>
+</div>
+<div id="configPage" class="page"><div class="config-panel"><div class="tabs"><button class="tab active" data-tab="capturesTab">CAPTURADORAS</button><button class="tab" data-tab="networkTab">RED / SNMP</button><button class="tab" data-tab="telegramTab">TELEGRAM</button><button class="tab" data-tab="vpnTab">VPN</button></div>
+<div id="capturesTab" class="tab-page active"><div class="grid-2"><div class="card"><h3>CAPTURADORA 1</h3><div id="form1"></div></div><div class="card purple"><h3>CAPTURADORA 2</h3><div id="form2"></div></div></div><button class="save-btn" onclick="saveCaptures()">GUARDAR CAPTURADORAS</button><div id="captureMessage" class="message"></div></div>
+<div id="networkTab" class="tab-page"><div class="grid-2"><div class="card"><h3>CONFIGURACIÓN DE RED</h3><div class="form-row"><label>IP:</label><input id="network_ip"></div><div class="form-row"><label>NETMASK:</label><input id="network_netmask"></div><div class="form-row"><label>GATEWAY:</label><input id="network_gateway"></div><div class="form-row"><label>DNS1:</label><input id="network_dns1"></div><div class="form-row"><label>DNS2:</label><input id="network_dns2"></div></div><div class="card green"><h3>ZABBIX POR SNMPv2c</h3><p class="integration-note">Zabbix consulta CPU, RAM, temperatura, disco y capturadoras por UDP 161. Las fallas e identificaciones se envían inmediatamente como traps al puerto UDP 162.</p><div class="form-row"><label>Habilitar SNMP/Zabbix:</label><label class="switch"><input id="snmp_enabled" type="checkbox"><span class="slider"></span></label></div><div class="form-row"><label>IP del servidor Zabbix:</label><input id="snmp_zabbix_server" placeholder="Ej. 192.168.1.50"></div><div class="form-row"><label>Puerto de consultas:</label><input id="snmp_agent_port" type="number" min="1" max="65535" value="161"></div><div class="form-row"><label>Puerto de traps:</label><input id="snmp_trap_port" type="number" min="1" max="65535" value="162"></div><div class="form-row"><label>Comunidad SNMPv2c:</label><input id="snmp_community" type="password" class="secret-input" placeholder="Dejar vacío para conservar la actual"></div><div class="form-row"><label>Árbol OID local:</label><input id="snmp_oid_base" class="secret-input" value="1.3.6.1.4.1.8072.9999.1" readonly></div></div></div><div class="auth-block"><h4><svg class="icon" style="width:20px;height:20px;vertical-align:middle"><use href="#i-lock"/></svg> Autorización para actualizar Red/SNMP</h4><div class="snmp-grid"><div class="form-row"><label>Usuario:</label><input id="network_auth_user" autocomplete="username"></div><div class="form-row"><label>Contraseña:</label><input id="network_auth_password" type="password" autocomplete="current-password"></div></div></div><button class="save-btn" onclick="saveNetworkAndSnmp()">GUARDAR RED Y SNMP</button><div id="networkMessage" class="message"></div></div>
+<div id="telegramTab" class="tab-page"><div class="card"><h3><svg class="icon" style="width:22px;height:22px;vertical-align:middle"><use href="#i-telegram"/></svg> CONFIGURACIÓN DE TELEGRAM</h3><p class="integration-note">Registra el token del bot y el ID del grupo. El token permanece en el archivo local con permisos restringidos y nunca se devuelve al navegador.</p><div class="form-row"><label>Telegram habilitado:</label><label class="switch"><input id="telegram_enabled" type="checkbox"><span class="slider"></span></label></div><div class="form-row"><label>ID del grupo:</label><input id="telegram_chat_id" placeholder="Ej. -1001234567890"></div><div class="form-row"><label>Token del bot:</label><input id="telegram_token" type="password" class="secret-input" placeholder="Dejar vacío para conservar el actual"></div><hr><h3>HORARIOS DE IDENTIFICACIÓN DE CANAL</h3><p class="integration-note">Cada horario abre una ventana de una hora. Ejemplo: 06:00 envía identificaciones detectadas entre 06:00 y 06:59.</p><div class="form-row"><label>Enviar identificaciones:</label><label class="switch"><input id="telegram_channel_id_enabled" type="checkbox"><span class="slider"></span></label></div><div class="grid-2"><div><div class="form-row"><label>Horario mañana activo:</label><label class="switch"><input id="telegram_morning_enabled" type="checkbox"><span class="slider"></span></label></div><div class="form-row"><label>Inicio mañana:</label><input id="telegram_morning_time" type="time" step="60"></div></div><div><div class="form-row"><label>Horario tarde activo:</label><label class="switch"><input id="telegram_afternoon_enabled" type="checkbox"><span class="slider"></span></label></div><div class="form-row"><label>Inicio tarde:</label><input id="telegram_afternoon_time" type="time" step="60"></div></div></div><div class="auth-block"><h4><svg class="icon" style="width:20px;height:20px;vertical-align:middle"><use href="#i-lock"/></svg> Autorización para editar token, chat ID y horarios</h4><div class="snmp-grid"><div class="form-row"><label>Usuario:</label><input id="telegram_auth_user" autocomplete="username" placeholder="Admin"></div><div class="form-row"><label>Contraseña:</label><input id="telegram_auth_password" type="password" autocomplete="current-password" placeholder="admin"></div></div></div><button class="save-btn" onclick="saveTelegram()">GUARDAR / MODIFICAR TELEGRAM</button><div id="telegramMessage" class="message"></div></div></div>
+<div id="vpnTab" class="tab-page"><div class="grid-2"><div class="card"><h3>ZEROTIER <span id="vpn_zt_status" class="status-chip off">NO INSTALADO</span></h3><p class="integration-note">Conecta la Raspberry Pi a una red privada de ZeroTier. El nombre del dispositivo es una referencia local del dashboard.</p><div class="form-row"><label>Habilitar ZeroTier:</label><label class="switch"><input id="vpn_zt_enabled" type="checkbox" onchange="updateVpnFields()"><span class="slider"></span></label></div><div class="form-row"><label>Network ID:</label><input id="vpn_zt_network" maxlength="16" placeholder="16 caracteres hexadecimales"></div><div class="form-row"><label>Nombre del dispositivo:</label><input id="vpn_zt_name" maxlength="80" value="raspberrypi-vision-ai"></div></div><div class="card purple"><h3>WIREGUARD <span id="vpn_wg_status" class="status-chip off">NO INSTALADO</span></h3><p class="integration-note">Activa una interfaz WireGuard configurada previamente en /etc/wireguard.</p><div class="form-row"><label>Habilitar WireGuard:</label><label class="switch"><input id="vpn_wg_enabled" type="checkbox" onchange="updateVpnFields()"><span class="slider"></span></label></div><div class="form-row"><label>Interfaz:</label><input id="vpn_wg_interface" maxlength="15" value="wg0" oninput="updateWireGuardPath()"></div><div class="form-row"><label>Archivo:</label><input id="vpn_wg_config" value="/etc/wireguard/wg0.conf" readonly></div></div></div><div class="auth-block"><h4><svg class="icon" style="width:20px;height:20px;vertical-align:middle"><use href="#i-lock"/></svg> Autorización para editar VPN</h4><p class="integration-note">Utiliza las mismas credenciales administrativas de Telegram.</p><div class="snmp-grid"><div class="form-row"><label>Usuario:</label><input id="vpn_auth_user" autocomplete="username" placeholder="Admin"></div><div class="form-row"><label>Contraseña:</label><input id="vpn_auth_password" type="password" autocomplete="current-password" placeholder="admin"></div></div></div><button class="save-btn" onclick="saveVpn()">GUARDAR CONFIGURACIÓN VPN</button><div id="vpnMessage" class="message"></div></div>
+
+
+</div></div>
+<div id="generalPage" class="page"><div class="general-panel"><div class="general-grid"><div class="card"><h3>TIEMPO ACTIVO - CAPTURADORA 1</h3><div class="uptime-layout"><div><span id="uptimeStatus1" class="status-chip">--</span><div id="uptime1" class="big-time">00:00:00</div><small>Desde: <span id="uptimeSince1">--</span></small></div><svg class="chart" viewBox="0 0 500 125" preserveAspectRatio="none"><polyline id="uptimeChart1" points="0,120 500,120"/></svg></div></div><div class="card"><h3>USO DE ALMACENAMIENTO</h3><div class="resource-layout"><div class="donut-wrap"><div id="diskGauge" class="donut"></div><div class="donut-center"><div id="diskValue" class="donut-value">0%</div><small>USADO</small></div></div><div class="details"><div><span>Usado:</span><span id="diskUsed">0 GB</span></div><div><span>Total:</span><span id="diskTotal">0 GB</span></div><div><span>Libre:</span><span id="diskFree">0 GB</span></div></div></div></div><div class="card purple"><h3>TIEMPO ACTIVO - CAPTURADORA 2</h3><div class="uptime-layout"><div><span id="uptimeStatus2" class="status-chip off">--</span><div id="uptime2" class="big-time">00:00:00</div><small>Desde: <span id="uptimeSince2">--</span></small></div><svg class="chart purple" viewBox="0 0 500 125" preserveAspectRatio="none"><polyline id="uptimeChart2" points="0,120 500,120"/></svg></div></div><div class="card purple"><h3>USO DE MEMORIA RAM</h3><div class="resource-layout"><div class="donut-wrap"><div id="ramGauge" class="donut purple"></div><div class="donut-center"><div id="ramValue" class="donut-value">0%</div><small>USADA</small></div></div><div class="details"><div><span>Usado:</span><span id="ramUsed">0 GB</span></div><div><span>Total:</span><span id="ramTotal">0 GB</span></div><div><span>Libre:</span><span id="ramFree">0 GB</span></div></div></div></div><div class="card green" style="grid-column:1/-1"><h3>TEMPERATURA RASPBERRY PI</h3><div class="uptime-layout"><div><div id="tempValue" class="temp-value">-- °C</div><span id="tempState" class="status-chip">Sin lectura</span></div><svg class="chart green" viewBox="0 0 800 125" preserveAspectRatio="none"><polyline id="tempChart" points="0,120 800,120"/></svg></div></div></div></div></div>
+</section></main></div>
+<div id="eventMediaModal" class="modal"><div class="media-modal-box"><div class="media-modal-head"><h3 id="eventModalTitle">Detalle del evento</h3><button onclick="closeEventModal()">×</button></div><div class="media-modal-body"><div id="eventMediaPreview" class="media-preview"></div><div><div id="eventModalDetails" class="event-detail-list"></div><a id="eventDownloadButton" class="download-btn" href="#" download><svg class="icon" style="width:18px;height:18px"><use href="#i-download"/></svg>DESCARGAR</a></div></div></div></div>
+<div id="powerModal" class="modal"><div class="modal-box"><h3 id="powerTitle">Confirmar acción</h3><p id="powerText"></p><div class="modal-actions"><button class="cancel" onclick="closePowerModal()">CANCELAR</button><button class="confirm" onclick="executePowerAction()">CONFIRMAR</button></div></div></div>
+<div id="aboutModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="aboutTitle" onclick="if(event.target===this)closeAboutModal()"><div class="about-box"><div class="about-head"><img src="/static/Zabbix_logo.svg" alt="Zabbix"><h3 id="aboutTitle">ACERCA DEL SISTEMA</h3><button class="about-close" type="button" onclick="closeAboutModal()" aria-label="Cerrar">×</button></div><div class="about-content"><div class="about-row"><div class="about-label">DESARROLLADOR</div><div class="about-value developer">ING. GADIEL AMINADAB ORTIZ GUTIÉRREZ</div></div><div class="about-row"><div class="about-label">PUESTO DE TRABAJO</div><div class="about-value">OPER. DE TX Y MTTO TR. CE MÉRIDA, YUCATÁN.</div></div><div class="about-row"><div class="about-label">PROYECTO</div><div class="about-value">Desarrollo e implementación del Sistema de Monitoreo Zabbix.</div></div><div class="about-version">MONITOR TV · VERSIÓN 1.0.3 · 2026</div></div></div></div>
+<script src="/static/hls.min.js"></script>
+<script>
+const $=id=>document.getElementById(id);const history={uptime1:[],uptime2:[],temp:[]};const EVENTS_PER_PAGE=100;let pendingPowerAction=null;let loadedConfig=null;let latestConfig=null;let captureHardware=[];let videoPaused={1:false,2:false};let loadedEvents=[];let mediaEventsPage=1;let deliveryEventsPage=1;let liveHls={1:null,2:null};let liveRetryTimer={1:null,2:null};
+
+function initLivePlayer(number,force=false){
+    const video=$('video'+number);
+    if(!video)return;
+
+    if(liveRetryTimer[number]){
+        clearTimeout(liveRetryTimer[number]);
+        liveRetryTimer[number]=null;
+    }
+
+    if(liveHls[number]){
+        liveHls[number].destroy();
+        liveHls[number]=null;
+    }
+
+    const source='/live/capture_'+number+'/stream.m3u8?refresh='+Date.now();
+
+    if(window.Hls&&Hls.isSupported()){
+        liveHls[number]=new Hls({
+            lowLatencyMode:true,
+            liveSyncDurationCount:2,
+            liveMaxLatencyDurationCount:4,
+            maxLiveSyncPlaybackRate:1.15,
+            maxBufferLength:4,
+            backBufferLength:0,
+            enableWorker:true
+        });
+
+        liveHls[number].attachMedia(video);
+        liveHls[number].on(Hls.Events.MEDIA_ATTACHED,()=>liveHls[number].loadSource(source));
+        liveHls[number].on(Hls.Events.MANIFEST_PARSED,()=>video.play().catch(()=>{}));
+        liveHls[number].on(Hls.Events.ERROR,(_,data)=>{
+            if(!data.fatal)return;
+            if(data.type===Hls.ErrorTypes.NETWORK_ERROR){
+                liveHls[number].startLoad();
+                return;
+            }
+            if(data.type===Hls.ErrorTypes.MEDIA_ERROR){
+                liveHls[number].recoverMediaError();
+                return;
+            }
+            liveHls[number].destroy();
+            liveHls[number]=null;
+            liveRetryTimer[number]=setTimeout(()=>initLivePlayer(number,true),2000);
+        });
+        return;
+    }
+
+    if(video.canPlayType('application/vnd.apple.mpegurl')){
+        video.src=source;
+        video.play().catch(()=>{});
+    }
+}
+
+function keepLiveEdge(number){
+    const video=$('video'+number);
+    if(!video||video.paused||!video.seekable.length)return;
+    const liveEdge=video.seekable.end(video.seekable.length-1);
+    if(liveEdge-video.currentTime>4){
+        video.currentTime=Math.max(0,liveEdge-2);
+    }
+}
+function iconInfo(symbol,label,value){return `<div class="info-item"><svg class="icon"><use href="#${symbol}"/></svg><div><div class="label">${label}</div><div class="value">${value||'--'}</div></div></div>`}
+function selectedHardwareLabel(c){const item=captureHardware.find(x=>x.hardware_id===c.hardware_id);return item?item.label:(c.hardware_id||c.video_device||'No asignada')}
+function renderInfo(id,c){$(id).innerHTML=iconInfo('i-device','Capturadora',selectedHardwareLabel(c))+iconInfo('i-monitor','Distintivo',c.station_id)+iconInfo('i-grid','Nombre del canal',c.channel_name)+iconInfo('i-monitor','Canal',c.channel_number)+iconInfo('i-pin','Lugar o ciudad',c.location)+iconInfo('i-power','Habilitada',c.enabled?'<span class="status-pill">Sí</span>':'No')}
+function hardwareOptions(selected){let html='<option value="">Selecciona una capturadora USB</option>';for(const item of captureHardware){html+=`<option value="${item.hardware_id}" ${item.hardware_id===selected?'selected':''}>${item.label}</option>`}return html}
+function formMarkup(prefix,c){return `<div class="form-row"><label>Capturadora física:</label><select id="${prefix}_hardware" onchange="avoidDuplicateHardware('${prefix}')">${hardwareOptions(c.hardware_id||'')}</select></div><div class="form-row"><label>Emparejamiento A/V:</label><div class="integration-note">Video y audio del mismo puerto USB</div></div><div class="form-row"><label>Distintivo:</label><input id="${prefix}_station"></div><div class="form-row"><label>Nombre del canal:</label><input id="${prefix}_name"></div><div class="form-row"><label>Canal:</label><input id="${prefix}_number"></div><div class="form-row"><label>Lugar o ciudad:</label><input id="${prefix}_location"></div><div class="form-row"><label>Habilitada:</label><label class="switch"><input id="${prefix}_enabled" type="checkbox"><span class="slider"></span></label></div>`}
+function fillForm(prefix,c){$(prefix+'_hardware').value=c.hardware_id||'';$(prefix+'_station').value=c.station_id;$(prefix+'_name').value=c.channel_name;$(prefix+'_number').value=c.channel_number;$(prefix+'_location').value=c.location;$(prefix+'_enabled').checked=c.enabled}
+function avoidDuplicateHardware(prefix){const own=$(prefix+'_hardware');const other=$(prefix==='c1'?'c2_hardware':'c1_hardware');if(own&&other&&own.value&&own.value===other.value&&captureHardware.length===2){const alternative=captureHardware.find(x=>x.hardware_id!==own.value);if(alternative)other.value=alternative.hardware_id}}
+async function loadConfig(){const [r,h]=await Promise.all([fetch('/api/config'),fetch('/api/hardware/captures',{cache:'no-store'})]);const d=await r.json();const hardwareData=await h.json();captureHardware=hardwareData.devices||[];latestConfig=d;$('form1').innerHTML=formMarkup('c1',d.captures.capture_1);$('form2').innerHTML=formMarkup('c2',d.captures.capture_2);fillForm('c1',d.captures.capture_1);fillForm('c2',d.captures.capture_2);renderInfo('info1',d.captures.capture_1);renderInfo('info2',d.captures.capture_2);$('disabled1').classList.toggle('show',!d.captures.capture_1.enabled);$('disabled2').classList.toggle('show',!d.captures.capture_2.enabled);['ip','netmask','gateway','dns1','dns2'].forEach(k=>$('network_'+k).value=d.network[k]||'');const i=d.integrations||{};const s=i.snmp||{};const t=i.telegram||{};$('snmp_enabled').checked=!!s.enabled;$('snmp_zabbix_server').value=s.zabbix_server||'';$('snmp_agent_port').value=s.agent_port||161;$('snmp_trap_port').value=s.trap_port||162;$('snmp_community').value='';$('snmp_community').placeholder=s.community_configured?'Configurada; dejar vacío para conservar':'Mínimo 8 caracteres';$('snmp_oid_base').value=s.oid_base||'1.3.6.1.4.1.8072.9999.1';$('telegram_enabled').checked=!!t.enabled;$('telegram_chat_id').value=t.chat_id||'';$('telegram_token').value='';$('telegram_channel_id_enabled').checked=!!t.channel_id_enabled;$('telegram_morning_enabled').checked=!!t.morning_enabled;$('telegram_morning_time').value=t.morning_time||'06:00';$('telegram_afternoon_enabled').checked=!!t.afternoon_enabled;$('telegram_afternoon_time').value=t.afternoon_time||'17:00';fillVpn(i.vpn||{});renderTemplatesReadonly()}
+function openPage(pageId,navId,title,description){document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));document.querySelectorAll('.nav button').forEach(b=>b.classList.remove('active'));$(pageId).classList.add('active');$(navId).classList.add('active');$('pageTitle').textContent=title;$('pageDescription').textContent=description;if(pageId==='generalPage')refreshStatus()}
+function openEventsPage(){mediaEventsPage=1;deliveryEventsPage=1;openPage('eventsPage','eventsNav','EVENTOS','Historial de fallas, identificaciones y entregas a Telegram/Zabbix');loadEvents()}
+document.querySelectorAll('.tab').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));document.querySelectorAll('.tab-page').forEach(x=>x.classList.remove('active'));b.classList.add('active');$(b.dataset.tab).classList.add('active')}));
+function capture(prefix){return{hardware_id:$(prefix+'_hardware').value,station_id:$(prefix+'_station').value,channel_name:$(prefix+'_name').value,channel_number:$(prefix+'_number').value,location:$(prefix+'_location').value,enabled:$(prefix+'_enabled').checked}}
+function showMessage(id,text,ok){$(id).textContent=text;$(id).className='message '+(ok?'ok':'error')}
+async function saveCaptures(){const body={capture_1:capture('c1'),capture_2:capture('c2')};if(body.capture_1.enabled&&body.capture_2.enabled&&body.capture_1.hardware_id===body.capture_2.hardware_id){showMessage('captureMessage','Los dos canales no pueden usar la misma capturadora física.',false);return}const r=await fetch('/api/config/captures',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});const d=await r.json();showMessage('captureMessage',d.message,d.ok);if(d.ok)loadConfig()}
+async function saveNetworkAndSnmp(){const body={network:{ip:$('network_ip').value,netmask:$('network_netmask').value,gateway:$('network_gateway').value,dns1:$('network_dns1').value,dns2:$('network_dns2').value},snmp:{enabled:$('snmp_enabled').checked,zabbix_server:$('snmp_zabbix_server').value,agent_port:Number($('snmp_agent_port').value),trap_port:Number($('snmp_trap_port').value),community:$('snmp_community').value},auth:{username:$('network_auth_user').value,password:$('network_auth_password').value}};const r=await fetch('/api/config/network-snmp',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});const d=await r.json();showMessage('networkMessage',d.message,d.ok);if(d.ok){$('network_auth_password').value='';$('snmp_community').value='';loadConfig()}}
+async function saveTelegram(){const body={telegram:{enabled:$('telegram_enabled').checked,chat_id:$('telegram_chat_id').value,token:$('telegram_token').value,channel_id_enabled:$('telegram_channel_id_enabled').checked,morning_enabled:$('telegram_morning_enabled').checked,morning_time:$('telegram_morning_time').value,afternoon_enabled:$('telegram_afternoon_enabled').checked,afternoon_time:$('telegram_afternoon_time').value},auth:{username:$('telegram_auth_user').value,password:$('telegram_auth_password').value}};const r=await fetch('/api/config/telegram',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});const d=await r.json();showMessage('telegramMessage',d.message,d.ok);if(d.ok){$('telegram_token').value='';$('telegram_auth_password').value='';loadConfig()}}
+
+function updateWireGuardPath(){const name=($('vpn_wg_interface').value||'wg0').trim();$('vpn_wg_config').value=`/etc/wireguard/${name}.conf`}
+function updateVpnFields(){const zt=$('vpn_zt_enabled').checked;const wg=$('vpn_wg_enabled').checked;$('vpn_zt_network').disabled=!zt;$('vpn_zt_name').disabled=!zt;$('vpn_wg_interface').disabled=!wg;$('vpn_wg_config').disabled=!wg}
+function setVpnStatus(id,data,configRequired){const element=$(id);let text='NO INSTALADO';let active=false;if(data&&data.installed){if(configRequired&&!data.config_exists){text='SIN CONFIGURACIÓN'}else if(data.active){text='ACTIVO';active=true}else{text='DETENIDO'}}element.textContent=text;element.className='status-chip'+(active?'':' off')}
+function fillVpn(vpn){const zt=vpn.zerotier||{};const wg=vpn.wireguard||{};const status=vpn.status||{};$('vpn_zt_enabled').checked=!!zt.enabled;$('vpn_zt_network').value=zt.network_id||'';$('vpn_zt_name').value=zt.device_name||'raspberrypi-vision-ai';$('vpn_wg_enabled').checked=!!wg.enabled;$('vpn_wg_interface').value=wg.interface||'wg0';$('vpn_wg_config').value=wg.config_path||`/etc/wireguard/${$('vpn_wg_interface').value}.conf`;setVpnStatus('vpn_zt_status',status.zerotier||{},false);setVpnStatus('vpn_wg_status',status.wireguard||{},true);updateVpnFields()}
+async function saveVpn(){const body={vpn:{zerotier:{enabled:$('vpn_zt_enabled').checked,network_id:$('vpn_zt_network').value,device_name:$('vpn_zt_name').value},wireguard:{enabled:$('vpn_wg_enabled').checked,interface:$('vpn_wg_interface').value,config_path:$('vpn_wg_config').value}},auth:{username:$('vpn_auth_user').value,password:$('vpn_auth_password').value}};const r=await fetch('/api/config/vpn',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});const d=await r.json();showMessage('vpnMessage',d.message,d.ok);$('vpn_auth_password').value='';if(d.ok)loadConfig()}
+
+function renderTemplatesReadonly(){
+    if(!latestConfig||!latestConfig.captures)return;
+
+    const capture1=latestConfig.captures.capture_1||{};
+    const capture2=latestConfig.captures.capture_2||{};
+
+    const setText=(id,value)=>{
+        const element=$(id);
+        if(element)element.textContent=value||'--';
+    };
+
+    setText('template_c1_device',capture1.video_device);
+    setText('template_c1_name',capture1.channel_name);
+    setText('template_c1_station',capture1.station_id);
+    setText('template_c1_channel',capture1.channel_number);
+    setText('template_c1_location',capture1.location);
+
+    setText('template_c2_device',capture2.video_device);
+    setText('template_c2_name',capture2.channel_name);
+    setText('template_c2_station',capture2.station_id);
+    setText('template_c2_channel',capture2.channel_number);
+    setText('template_c2_location',capture2.location);
+}
+
+async function refreshInterface(){
+    const button=$('refreshInterfaceButton');
+    if(button)button.classList.add('loading');
+    try{
+        await Promise.all([
+            loadConfig(),
+            refreshStatus(),
+            loadEvents(),
+            refreshAudio(1),
+            refreshAudio(2)
+        ]);
+        initLivePlayer(1,true);
+        initLivePlayer(2,true);
+    }finally{
+        if(button){
+            setTimeout(()=>button.classList.remove('loading'),500);
+        }
+    }
+}
+
+function eventLabel(type){
+    return ({
+        no_audio:'SIN AUDIO',
+        audio:'SIN AUDIO',
+        freeze:'IMAGEN CONGELADA',
+        black:'NEGROS',
+        channel_id:'IDENTIFICACIÓN DE CANAL',
+        artifact:'DIGITALIZACIÓN'
+    }[type]||String(type||'EVENTO').toUpperCase());
+}
+
+function durationText(seconds){
+    return seconds==null?'—':formatDuration(seconds);
+}
+
+function deliveryCell(item,key){
+    const value=item[key]||{};
+    if(value.sent){
+        return `<span class="delivery-ok">● Enviado<br><small>${value.time||''}</small></span>`;
+    }
+    if(value.attempted){
+        return '<span class="delivery-fail">● No enviado</span>';
+    }
+    if(value.status==='outside_schedule'){
+        return '<span class="delivery-pending">● Fuera de horario</span>';
+    }
+    if(value.status==='disabled'){
+        return '<span class="delivery-pending">● Deshabilitado</span>';
+    }
+    return '<span class="delivery-pending">● Pendiente</span>';
+}
+
+async function loadEvents(){
+    try{
+        const response=await fetch('/api/events',{cache:'no-store'});
+        if(!response.ok){
+            throw new Error(`HTTP ${response.status}`);
+        }
+        const data=await response.json();
+        loadedEvents=Array.isArray(data)?data:[];
+        renderEvents();
+    }catch(error){
+        console.error('Error cargando eventos:',error);
+        loadedEvents=[];
+        renderEvents();
+    }
+}
+
+function paginationPages(currentPage,totalPages){
+    const pages=[];
+    for(let page=1;page<=totalPages;page+=1){
+        if(
+            page===1||
+            page===totalPages||
+            Math.abs(page-currentPage)<=2
+        ){
+            pages.push(page);
+        }
+    }
+    return pages;
+}
+
+function renderEventsPagination(containerId,currentPage,totalItems,setterName){
+    const container=$(containerId);
+    if(!container)return;
+
+    const totalPages=Math.max(1,Math.ceil(totalItems/EVENTS_PER_PAGE));
+    const start=totalItems?(currentPage-1)*EVENTS_PER_PAGE+1:0;
+    const end=Math.min(currentPage*EVENTS_PER_PAGE,totalItems);
+    const pages=paginationPages(currentPage,totalPages);
+    let previousPage=0;
+    let pageButtons='';
+
+    pages.forEach(page=>{
+        if(previousPage&&page-previousPage>1){
+            pageButtons+='<span class="pagination-ellipsis">…</span>';
+        }
+        pageButtons+=`<button class="pagination-button ${page===currentPage?'active':''}" onclick="${setterName}(${page})">${page}</button>`;
+        previousPage=page;
+    });
+
+    container.innerHTML=`
+        <span>Mostrando ${start}–${end} de ${totalItems} eventos · 100 por página</span>
+        <div class="pagination-buttons">
+            <button class="pagination-button" onclick="${setterName}(${currentPage-1})" ${currentPage<=1?'disabled':''}>Anterior</button>
+            ${pageButtons}
+            <button class="pagination-button" onclick="${setterName}(${currentPage+1})" ${currentPage>=totalPages?'disabled':''}>Siguiente</button>
+        </div>`;
+}
+
+function setMediaPage(page){
+    const filterElement=$('eventTypeFilter');
+    const filter=filterElement?filterElement.value:'all';
+    const totalItems=loadedEvents.filter(event=>{
+        if(filter==='identification')return event.media_type==='image';
+        if(filter==='failure')return event.media_type==='video';
+        return true;
+    }).length;
+    const totalPages=Math.max(1,Math.ceil(totalItems/EVENTS_PER_PAGE));
+    mediaEventsPage=Math.min(Math.max(1,Number(page)||1),totalPages);
+    renderEvents();
+}
+
+function setDeliveryPage(page){
+    const totalPages=Math.max(1,Math.ceil(loadedEvents.length/EVENTS_PER_PAGE));
+    deliveryEventsPage=Math.min(Math.max(1,Number(page)||1),totalPages);
+    renderEvents();
+}
+
+function renderEvents(){
+    const filterElement=$('eventTypeFilter');
+    const filter=filterElement?filterElement.value:'all';
+    const allMedia=loadedEvents.filter(event=>{
+        if(filter==='all')return true;
+        if(filter==='identification')return event.media_type==='image';
+        if(filter==='failure')return event.media_type==='video';
+        return true;
+    });
+    const mediaTotalPages=Math.max(1,Math.ceil(allMedia.length/EVENTS_PER_PAGE));
+    mediaEventsPage=Math.min(Math.max(1,mediaEventsPage),mediaTotalPages);
+    const mediaStart=(mediaEventsPage-1)*EVENTS_PER_PAGE;
+    const media=allMedia.slice(mediaStart,mediaStart+EVENTS_PER_PAGE);
+
+    const mediaBody=$('eventsMediaBody');
+    if(mediaBody){
+        mediaBody.innerHTML=media.length
+            ? media.map(event=>`<tr>
+                <td><span class="event-type"><span class="event-dot ${event.type}"></span>${eventLabel(event.type)}</span></td>
+                <td>${event.channel||'--'}</td>
+                <td>${event.datetime||'--'}</td>
+                <td>${durationText(event.duration)}</td>
+                <td><button class="view-btn" onclick="openEventModal('${event.id}')"><svg class="icon" style="width:17px;height:17px"><use href="#i-eye"/></svg>Ver</button></td>
+            </tr>`).join('')
+            : '<tr><td colspan="5" class="empty-state">Todavía no hay evidencias registradas.</td></tr>';
+    }
+    renderEventsPagination(
+        'eventsMediaPagination',
+        mediaEventsPage,
+        allMedia.length,
+        'setMediaPage'
+    );
+
+    const deliveryTotalPages=Math.max(1,Math.ceil(loadedEvents.length/EVENTS_PER_PAGE));
+    deliveryEventsPage=Math.min(Math.max(1,deliveryEventsPage),deliveryTotalPages);
+    const deliveryStart=(deliveryEventsPage-1)*EVENTS_PER_PAGE;
+    const delivery=loadedEvents.slice(
+        deliveryStart,
+        deliveryStart+EVENTS_PER_PAGE
+    );
+    const deliveryBody=$('eventsDeliveryBody');
+    if(deliveryBody){
+        deliveryBody.innerHTML=delivery.length
+            ? delivery.map(event=>`<tr>
+                <td><span class="event-type"><span class="event-dot ${event.type}"></span>${eventLabel(event.type)}</span></td>
+                <td>${event.channel||'--'}</td>
+                <td>${event.datetime||'--'}</td>
+                <td>${durationText(event.duration)}</td>
+                <td>${deliveryCell(event,'telegram')}</td>
+                <td>${deliveryCell(event,'zabbix')}</td>
+            </tr>`).join('')
+            : '<tr><td colspan="6" class="empty-state">Todavía no hay envíos registrados.</td></tr>';
+    }
+    renderEventsPagination(
+        'eventsDeliveryPagination',
+        deliveryEventsPage,
+        loadedEvents.length,
+        'setDeliveryPage'
+    );
+}
+
+function openEventModal(id){
+    const event=loadedEvents.find(item=>item.id===id);
+    if(!event)return;
+
+    $('eventModalTitle').textContent=eventLabel(event.type);
+
+    const preview=$('eventMediaPreview');
+    preview.innerHTML=event.media_type==='video'
+        ? `<video controls autoplay src="${event.media_url}"></video>`
+        : `<img src="${event.media_url}" alt="Evidencia">`;
+
+    $('eventModalDetails').innerHTML=`
+        <div class="event-detail-row"><small>Canal</small>${event.channel||'--'}</div>
+        <div class="event-detail-row"><small>Fecha y hora</small>${event.datetime||'--'}</div>
+        <div class="event-detail-row"><small>Duración</small>${durationText(event.duration)}</div>
+        <div class="event-detail-row"><small>Tipo de evidencia</small>${event.media_type==='video'?'Clip de video':'Captura de imagen'}</div>`;
+
+    const download=$('eventDownloadButton');
+    download.href=event.download_url;
+    download.innerHTML=`<svg class="icon" style="width:18px;height:18px"><use href="#i-download"/></svg>${event.media_type==='video'?'DESCARGAR CLIP':'DESCARGAR IMAGEN'}`;
+
+    $('eventMediaModal').classList.add('show');
+}
+
+function closeEventModal(){
+    $('eventMediaModal').classList.remove('show');
+    $('eventMediaPreview').innerHTML='';
+}
+
+function levelPercent(db){
+    return Math.max(0,Math.min(100,(Number(db)+60)/60*100));
+}
+
+async function refreshAudio(number=1){
+    try{
+        const response=await fetch('/audio_levels/capture_'+number,{cache:'no-store'});
+        if(!response.ok)return;
+        const data=await response.json();
+        const suffix=number===1?'':String(number);
+        const left=$('meterLeft'+suffix);
+        const right=$('meterRight'+suffix);
+        const dbLeft=$('dbLeft'+suffix);
+        const dbRight=$('dbRight'+suffix);
+        if(left)left.style.height=levelPercent(data.left_db)+'%';
+        if(right)right.style.height=levelPercent(data.right_db)+'%';
+        if(dbLeft)dbLeft.textContent=Number(data.left_db).toFixed(1)+' dB';
+        if(dbRight)dbRight.textContent=Number(data.right_db).toFixed(1)+' dB';
+    }catch(error){console.debug('Audio '+number+' no disponible:',error)}
+}
+
+function formatDuration(s){s=Math.max(0,Number(s)||0);const d=Math.floor(s/86400);s%=86400;const h=Math.floor(s/3600),m=Math.floor(s%3600/60),x=Math.floor(s%60);return(d?d+' d ':'')+[h,m,x].map(v=>String(v).padStart(2,'0')).join(':')}
+function setDonut(id,v){$(id).style.setProperty('--value',Math.max(0,Math.min(100,Number(v)||0)))}function addHistory(k,v){history[k].push(Number(v)||0);if(history[k].length>60)history[k].shift()}function drawChart(id,values,max,width){if(!values.length)return;const m=Math.max(Number(max)||1,...values,1),step=values.length>1?width/(values.length-1):width;$(id).setAttribute('points',values.map((v,i)=>`${(i*step).toFixed(1)},${(120-v/m*108).toFixed(1)}`).join(' '))}
+async function refreshStatus(){try{const r=await fetch('/status',{cache:'no-store'});const d=await r.json(),m=d.metrics,c1=d.captures.capture_1,c2=d.captures.capture_2;$('topCpu').textContent=m.cpu+'%';$('topRam').textContent=m.ram+'%';$('topDisk').textContent=m.disk+'%';$('cpuBar').style.width=m.cpu+'%';$('ramBar').style.width=m.ram+'%';$('diskBar').style.width=m.disk+'%';$('capture1State').textContent=c1.status;$('capture2State').textContent=c2.status;$('uptime1').textContent=formatDuration(c1.uptime_seconds);$('uptime2').textContent=formatDuration(c2.uptime_seconds);$('uptimeSince1').textContent=c1.started_at;$('uptimeSince2').textContent=c2.started_at;$('uptimeStatus1').textContent=c1.status;$('uptimeStatus2').textContent=c2.status;$('uptimeStatus2').className='status-chip '+(c2.enabled?'':'off');setDonut('diskGauge',m.disk);$('diskValue').textContent=m.disk+'%';$('diskUsed').textContent=m.disk_used_gb+' GB';$('diskTotal').textContent=m.disk_total_gb+' GB';$('diskFree').textContent=m.disk_free_gb+' GB';setDonut('ramGauge',m.ram);$('ramValue').textContent=m.ram+'%';$('ramUsed').textContent=m.ram_used_gb+' GB';$('ramTotal').textContent=m.ram_total_gb+' GB';$('ramFree').textContent=m.ram_free_gb+' GB';$('tempValue').textContent=(m.temperature??'--')+' °C';$('tempState').textContent=m.temperature==null?'Sin lectura':m.temperature<60?'NORMAL':m.temperature<75?'ELEVADA':'CRÍTICA';addHistory('uptime1',c1.uptime_seconds/3600);addHistory('uptime2',c2.uptime_seconds/3600);addHistory('temp',m.temperature??0);drawChart('uptimeChart1',history.uptime1,Math.max(...history.uptime1,1),500);drawChart('uptimeChart2',history.uptime2,Math.max(...history.uptime2,1),500);drawChart('tempChart',history.temp,100,800)}catch(e){console.error(e)}}
+function toggleAudio(number=1){const video=$('video'+number);video.muted=!video.muted;if(!video.muted)video.play().catch(()=>{});const button=$(number===1?'audioButton':'audioButton2');if(button)button.textContent=video.muted?'ESCUCHAR AUDIO':'SILENCIAR AUDIO'}
+function toggleVideo(number=1){const video=$('video'+number);videoPaused[number]=!videoPaused[number];if(videoPaused[number]){video.pause()}else{if(video.seekable.length){const edge=video.seekable.end(video.seekable.length-1);video.currentTime=Math.max(0,edge-2)}video.play().catch(()=>{})}const button=$(number===1?'playButton':'playButton2');if(button)button.textContent=videoPaused[number]?'▶':'❚❚'}
+function snapshot(number=1){const video=$('video'+number);if(!video.videoWidth||!video.videoHeight)return;const c=document.createElement('canvas');c.width=video.videoWidth;c.height=video.videoHeight;c.getContext('2d').drawImage(video,0,0);const a=document.createElement('a');a.download='capturadora'+number+'.png';a.href=c.toDataURL('image/png');a.click()}
+function fullscreenVideo(id){const e=$(id);if(e.requestFullscreen)e.requestFullscreen()}
+function tick(){const n=new Date();$('clock').textContent=n.toLocaleTimeString('es-MX',{hour12:false});$('date').textContent=n.toLocaleDateString('es-MX')}
+function openAboutModal(){$('aboutModal').classList.add('show')}
+function closeAboutModal(){$('aboutModal').classList.remove('show')}
+document.addEventListener('keydown',event=>{if(event.key==='Escape')closeAboutModal()})
+function openPowerModal(a){pendingPowerAction=a;$('powerTitle').textContent=a==='reboot'?'Reiniciar Raspberry Pi':'Apagar Raspberry Pi';$('powerText').textContent=a==='reboot'?'El monitoreo se detendrá temporalmente y la Raspberry Pi se reiniciará.':'El monitoreo se detendrá y será necesario encender físicamente la Raspberry Pi.';$('powerModal').classList.add('show')}function closePowerModal(){$('powerModal').classList.remove('show');pendingPowerAction=null}async function executePowerAction(){if(!pendingPowerAction)return;const r=await fetch(pendingPowerAction==='reboot'?'/system/reboot':'/system/shutdown',{method:'POST'});const d=await r.json();$('powerText').textContent=d.message;if(d.ok)setTimeout(closePowerModal,2500)}
+loadConfig();refreshStatus();refreshAudio(1);refreshAudio(2);initLivePlayer(1);initLivePlayer(2);tick();setInterval(refreshStatus,3000);setInterval(()=>{refreshAudio(1);refreshAudio(2)},500);setInterval(()=>{keepLiveEdge(1);keepLiveEdge(2)},2000);setInterval(tick,1000);
+</script>
+</body></html>

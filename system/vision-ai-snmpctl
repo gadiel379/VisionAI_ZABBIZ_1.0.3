@@ -1,0 +1,124 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
+import ipaddress
+import json
+import os
+import re
+import subprocess
+import sys
+from pathlib import Path
+
+
+CONFIG_PATH = Path("/etc/snmp/snmpd.conf")
+BASE_OID = "1.3.6.1.4.1.8072.9999.1"
+COMMUNITY_PATTERN = re.compile(r"^[A-Za-z0-9_.@-]{8,64}$")
+
+
+def fail(message):
+    print(message, file=sys.stderr)
+    return 1
+
+
+def run_systemctl(*arguments):
+    result = subprocess.run(
+        ["/usr/bin/systemctl", *arguments],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+        timeout=12,
+        check=False,
+    )
+    if result.returncode != 0:
+        raise RuntimeError((result.stderr or result.stdout).strip())
+
+
+def main():
+    try:
+        payload = json.load(sys.stdin)
+    except (ValueError, TypeError):
+        return fail("Solicitud SNMP inválida.")
+
+    enabled = bool(payload.get("enabled", False))
+    project_root = Path(str(payload.get("project_root") or ""))
+    expected_root = Path("@PROJECT_ROOT@")
+    if project_root != expected_root:
+        return fail("Ruta del proyecto no autorizada.")
+
+    if not enabled:
+        try:
+            run_systemctl("stop", "snmpd.service")
+        except RuntimeError as error:
+            return fail(str(error))
+        print("SNMP deshabilitado y snmpd detenido.")
+        return 0
+
+    try:
+        server = str(ipaddress.IPv4Address(str(payload.get("zabbix_server") or "")))
+        port = int(payload.get("agent_port", 161))
+    except (ipaddress.AddressValueError, ValueError, TypeError):
+        return fail("IP o puerto SNMP inválido.")
+
+    if not 1 <= port <= 65535:
+        return fail("Puerto SNMP fuera de rango.")
+
+    community = str(payload.get("community") or "")
+    if not COMMUNITY_PATTERN.fullmatch(community):
+        return fail("La comunidad debe tener de 8 a 64 caracteres seguros.")
+
+    interpreter = project_root / "venv" / "bin" / "python"
+    script = project_root / "integrations" / "snmp_pass_persist.py"
+    metrics = project_root / "storage" / "snmp" / "metrics.json"
+    if not interpreter.exists() or not script.exists():
+        return fail("No se encontraron los componentes SNMP del proyecto.")
+
+    content = "\n".join([
+        "# Administrado por Vision AI. No editar manualmente.",
+        "sysLocation Raspberry Pi Vision AI",
+        "sysContact Administrador Vision AI",
+        f"agentAddress udp:{port}",
+        f"view visionai included .{BASE_OID}",
+        f"rocommunity {community} {server}/32 -V visionai",
+        (
+            f"pass_persist .{BASE_OID} {interpreter} "
+            f"{script} {metrics}"
+        ),
+        "",
+    ])
+
+    previous_content = None
+    previous_mode = 0o600
+    if CONFIG_PATH.exists():
+        try:
+            previous_content = CONFIG_PATH.read_bytes()
+            previous_mode = CONFIG_PATH.stat().st_mode & 0o777
+        except OSError as error:
+            return fail(str(error))
+
+    CONFIG_PATH.parent.mkdir(parents=True, exist_ok=True)
+    temporary = CONFIG_PATH.with_suffix(".conf.vision-ai.tmp")
+    temporary.write_text(content, encoding="utf-8")
+    os.chmod(temporary, 0o600)
+    os.replace(temporary, CONFIG_PATH)
+
+    try:
+        run_systemctl("enable", "snmpd.service")
+        run_systemctl("restart", "snmpd.service")
+    except (OSError, subprocess.TimeoutExpired, RuntimeError) as error:
+        try:
+            if previous_content is None:
+                CONFIG_PATH.unlink(missing_ok=True)
+            else:
+                CONFIG_PATH.write_bytes(previous_content)
+                os.chmod(CONFIG_PATH, previous_mode)
+            run_systemctl("restart", "snmpd.service")
+        except (OSError, RuntimeError):
+            pass
+        return fail(str(error))
+
+    print(f"SNMPv2c activo en UDP {port}; acceso limitado a {server}.")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

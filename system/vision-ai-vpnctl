@@ -1,0 +1,173 @@
+#!/usr/bin/python3
+
+import os
+import re
+import shutil
+import subprocess
+import sys
+import time
+from pathlib import Path
+
+
+NETWORK_ID_PATTERN = re.compile(r"^[0-9a-fA-F]{16}$")
+INTERFACE_PATTERN = re.compile(r"^[A-Za-z0-9_=+.-]{1,15}$")
+SYSTEMCTL = "/usr/bin/systemctl"
+
+
+def fail(message, code=1):
+    print(str(message)[:500], file=sys.stderr)
+    raise SystemExit(code)
+
+
+def command_path(name, *candidates):
+    found = shutil.which(name)
+    if found:
+        return found
+
+    for candidate in candidates:
+        if Path(candidate).is_file():
+            return candidate
+
+    fail(f"No está instalado el comando {name}.")
+
+
+def run(arguments, timeout=45, check=True):
+    try:
+        result = subprocess.run(
+            arguments,
+            check=False,
+            capture_output=True,
+            text=True,
+            timeout=timeout,
+        )
+    except (OSError, subprocess.TimeoutExpired) as error:
+        fail(error)
+
+    if check and result.returncode != 0:
+        fail(
+            result.stderr.strip()
+            or result.stdout.strip()
+            or "El comando VPN no pudo completarse."
+        )
+
+    return result
+
+
+def validate_network_id(value):
+    if not NETWORK_ID_PATTERN.fullmatch(value or ""):
+        fail("Network ID de ZeroTier inválido.")
+    return value.lower()
+
+
+def validate_interface(value):
+    if not INTERFACE_PATTERN.fullmatch(value or ""):
+        fail("Interfaz WireGuard inválida.")
+    return value
+
+
+def zerotier_enable(network_id):
+    network_id = validate_network_id(network_id)
+    cli = command_path(
+        "zerotier-cli",
+        "/usr/sbin/zerotier-cli",
+        "/usr/bin/zerotier-cli",
+    )
+    run([SYSTEMCTL, "enable", "--now", "zerotier-one"])
+
+    last_result = None
+    for _ in range(10):
+        last_result = run(
+            [cli, "join", network_id],
+            timeout=10,
+            check=False,
+        )
+        if last_result.returncode == 0:
+            print(f"ZeroTier unido a {network_id}.")
+            return
+        time.sleep(1)
+
+    fail(
+        last_result.stderr.strip()
+        or last_result.stdout.strip()
+        or "ZeroTier no pudo unirse a la red."
+    )
+
+
+def zerotier_disable(network_id):
+    network_id = validate_network_id(network_id)
+    cli = command_path(
+        "zerotier-cli",
+        "/usr/sbin/zerotier-cli",
+        "/usr/bin/zerotier-cli",
+    )
+    run([cli, "leave", network_id], check=False)
+    run([SYSTEMCTL, "disable", "--now", "zerotier-one"])
+    print("ZeroTier deshabilitado.")
+
+
+def wireguard_config(interface):
+    interface = validate_interface(interface)
+    return Path(f"/etc/wireguard/{interface}.conf")
+
+
+def wireguard_enable(interface):
+    interface = validate_interface(interface)
+    command_path(
+        "wg-quick",
+        "/usr/bin/wg-quick",
+        "/usr/sbin/wg-quick",
+    )
+    configuration = wireguard_config(interface)
+    if not configuration.is_file():
+        fail(f"No existe {configuration}.")
+    run([
+        SYSTEMCTL,
+        "enable",
+        "--now",
+        f"wg-quick@{interface}",
+    ])
+    print(f"WireGuard {interface} habilitado.")
+
+
+def wireguard_disable(interface):
+    interface = validate_interface(interface)
+    run([
+        SYSTEMCTL,
+        "disable",
+        "--now",
+        f"wg-quick@{interface}",
+    ])
+    print(f"WireGuard {interface} deshabilitado.")
+
+
+def main():
+    if os.geteuid() != 0:
+        fail("Este ayudante debe ejecutarse como root.")
+
+    if len(sys.argv) != 3:
+        fail("Uso: vision-ai-vpnctl ACCION VALOR")
+
+    action = sys.argv[1]
+    value = sys.argv[2]
+
+    actions = {
+        "zerotier-enable": zerotier_enable,
+        "zerotier-disable": zerotier_disable,
+        "wireguard-enable": wireguard_enable,
+        "wireguard-disable": wireguard_disable,
+    }
+
+    if action == "wireguard-check":
+        raise SystemExit(
+            0 if wireguard_config(value).is_file() else 1
+        )
+
+    handler = actions.get(action)
+    if handler is None:
+        fail("Acción VPN no permitida.")
+
+    handler(value)
+
+
+if __name__ == "__main__":
+    main()
