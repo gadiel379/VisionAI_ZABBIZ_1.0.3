@@ -1,6 +1,14 @@
 # Historial de cambios
 
-## 1.0.3 - 2026-07-20
+## 1.0.3 - actualización de seguridad
+
+- Agrega la pestaña Seguridad al dashboard.
+- Unifica la autorización de RED/SNMP, Telegram y VPN con el usuario Admin.
+- Permite que Admin cambie su propia contraseña.
+- Agrega SuperAdmin únicamente para restablecer la contraseña de Admin.
+- Conserva la contraseña actual de Admin al actualizar desde 1.0.3.
+
+## 1.0.3 - publicación inicial - 2026-07-20
 
 - Distribución portable para Raspberry Pi OS Bookworm.
 - Instalador idempotente de un solo comando.
