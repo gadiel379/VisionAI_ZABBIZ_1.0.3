@@ -1,0 +1,28 @@
+[Unit]
+Description=Vision AI Broadcast Monitor
+After=network-online.target sound.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=@USER@
+Group=@GROUP@
+SupplementaryGroups=audio video
+WorkingDirectory=@PROJECT_ROOT@
+Environment=HOME=@HOME@
+EnvironmentFile=-/etc/vision-ai/vision-ai.env
+Environment=PYTHONUNBUFFERED=1
+ExecStartPre=/bin/sleep 2
+ExecStart=@PROJECT_ROOT@/venv/bin/python3 @PROJECT_ROOT@/main.py
+Restart=always
+RestartSec=5
+TimeoutStartSec=45
+TimeoutStopSec=30
+KillSignal=SIGINT
+KillMode=mixed
+UMask=0027
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

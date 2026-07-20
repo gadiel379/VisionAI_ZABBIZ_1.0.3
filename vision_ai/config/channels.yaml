@@ -1,0 +1,29 @@
+captures:
+  capture_1:
+    video_device: /dev/video2
+    audio_device: plughw:4,0
+    enabled: true
+    station_id: XHMEN-TDT
+    channel_name: RED5
+    channel_number: '5.1'
+    location: Merida, Yucatan.
+    template_name: red2
+    template_directory: config/templates/capture_1/red2
+    hardware_id: usb-2-2
+  capture_2:
+    video_device: /dev/video0
+    audio_device: plughw:3,0
+    enabled: true
+    station_id: XHTP-TDT
+    channel_name: RED2
+    channel_number: '2.1'
+    location: Merida, Yucatan.
+    template_name: ''
+    template_directory: ''
+    hardware_id: usb-2-1
+network:
+  ip: ''
+  netmask: ''
+  gateway: ''
+  dns1: ''
+  dns2: ''

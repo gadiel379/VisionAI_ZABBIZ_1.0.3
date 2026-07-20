@@ -1,0 +1,56 @@
+black:
+  enabled: true
+  luminance_threshold: 12
+  black_ratio_threshold: 98.0
+  confirmation_seconds: 10.0
+  graphic_luminance_threshold: 30
+  minimum_graphic_ratio: 0.2
+audio:
+  enabled: true
+  level_threshold_db: -55.0
+  confirmation_seconds: 10.0
+freeze:
+  enabled: true
+  difference_threshold: 0.3
+  static_regions_ratio: 0.9
+  recovery_difference_threshold: 2.0
+  recovery_changed_regions_ratio: 0.3
+  confirmation_seconds: 10.0
+  recovery_seconds: 2.0
+  analysis_width: 320
+  analysis_height: 180
+  grid_rows: 3
+  grid_columns: 3
+artifact:
+  enabled: true
+  block_sizes:
+  - 8
+  - 16
+  alignment_threshold: 1.22
+  temporal_increase_threshold: 0.22
+  minimum_boundary_strength: 4.0
+  affected_regions_ratio: 0.25
+  confirmation_seconds: 10.0
+  recovery_seconds: 2.0
+  baseline_seconds: 4.0
+  analysis_width: 320
+  analysis_height: 180
+  grid_rows: 4
+  grid_columns: 4
+  macroblock_excess_threshold: 3.0
+  macroblock_temporal_excess_threshold: 2.0
+  macroblock_min_temporal_change: 1.0
+  macroblock_max_temporal_change: 45.0
+  macroblock_evidence_frames: 4
+  macroblock_evidence_window_seconds: 2.0
+  macroblock_hold_seconds: 2.0
+channel_id:
+  enabled: true
+  capture_id: capture_1
+  confirmation_seconds: 0.5
+  disappearance_seconds: 2.0
+  processing_interval_seconds: 0.25
+  roi_x: 0
+  roi_y: 0
+  roi_width: 320
+  roi_height: 100

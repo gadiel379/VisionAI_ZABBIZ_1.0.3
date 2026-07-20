@@ -1,0 +1,24 @@
+capture_id: capture_1
+video_device: /dev/video0
+name: RED5
+station_id: XHMEN-TDT
+virtual_channel: '5.1'
+location: Merida, Yucatan.
+supported_virtual_channels:
+- '2.1'
+- '2.2'
+- '5.1'
+- '9.1'
+template_family: televisa_id
+template_directory: config/templates/red2
+template_threshold: 0.62
+generic_threshold: 0.62
+confirmation_seconds: 0.5
+disappearance_seconds: 2.0
+processing_interval_seconds: 0.25
+ocr_required: false
+roi:
+  x: 0
+  y: 0
+  width: 320
+  height: 100

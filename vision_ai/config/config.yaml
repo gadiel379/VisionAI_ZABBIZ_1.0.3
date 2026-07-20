@@ -1,0 +1,19 @@
+camera:
+
+  width: 1280
+  height: 720
+  fps: 20
+
+ai:
+
+  width: 640
+  height: 360
+  confidence: 0.50
+
+storage:
+
+  clip_seconds: 30
+
+telegram:
+
+  enabled: false

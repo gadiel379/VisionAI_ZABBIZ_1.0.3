@@ -1,0 +1,13 @@
+name: RED5
+station_id: XHMEN-TDT
+virtual_channel: '5.1'
+location: Merida, Yucatan.
+template_threshold: 0.62
+confirmation_seconds: 0.5
+disappearance_seconds: 2.0
+processing_interval_seconds: 0.25
+roi:
+  x: 0
+  y: 0
+  width: 320
+  height: 100

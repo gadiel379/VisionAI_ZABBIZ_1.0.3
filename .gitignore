@@ -1,0 +1,22 @@
+# Credenciales y estado local
+vision_ai/config/integrations.yaml
+vision_ai/storage/
+vision_ai/logs/
+
+# Entorno y archivos temporales
+vision_ai/venv/
+**/__pycache__/
+*.py[cod]
+*.tmp
+*.bak*
+*.save
+
+# Evidencias y paquetes locales
+*.mp4
+*.wav
+*.zip
+*.tar.gz
+
+# Configuración privada de WireGuard
+*.conf.private
+wg0.conf
