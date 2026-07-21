@@ -29,7 +29,7 @@ En una Raspberry nueva:
 
 ```bash
 curl -fsSL \
-https://raw.githubusercontent.com/gadiel379/VisionAI_ZABBIZ_1.0.3/v1.0.3-r2/install.sh \
+https://raw.githubusercontent.com/gadiel379/VisionAI_ZABBIZ_1.0.3/v1.0.3-r3/install.sh \
 | sudo bash
 ```
 
@@ -109,7 +109,7 @@ Una actualización vuelve a ejecutar el instalador y conserva:
 - eventos, clips y snapshots
 
 ```bash
-vision-ai-update v1.0.3-r2
+vision-ai-update v1.0.3-r3
 ```
 
 ## Zabbix y SNMPv2c
@@ -128,7 +128,7 @@ No representa un PEN empresarial registrado. Consulta la documentación en
 - No publiques `config/integrations.yaml`.
 - No publiques archivos WireGuard ni llaves privadas.
 - La rama `main` debe permanecer protegida.
-- Instala únicamente tags publicados, por ejemplo `v1.0.3-r2`; no uses `main` en
+- Instala únicamente tags publicados, por ejemplo `v1.0.3-r3`; no uses `main` en
   equipos de producción.
 - El dashboard debe permanecer en una LAN o VPN controlada.
 
