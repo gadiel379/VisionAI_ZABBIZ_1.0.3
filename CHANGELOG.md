@@ -1,5 +1,10 @@
 # Historial de cambios
 
+## 1.0.3-r3 - corrección del instalador
+
+- Evita un falso negativo al verificar los codificadores libx264 y AAC con
+  `pipefail` activo.
+
 ## 1.0.3 - actualización de seguridad
 
 - Agrega la pestaña Seguridad al dashboard.

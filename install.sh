@@ -2,7 +2,7 @@
 set -Eeuo pipefail
 
 VERSION="${VISIONAI_VERSION:-1.0.3}"
-REF="${VISIONAI_REF:-v1.0.3-r2}"
+REF="${VISIONAI_REF:-v1.0.3-r3}"
 REPOSITORY="${VISIONAI_REPOSITORY:-gadiel379/VisionAI_ZABBIZ_1.0.3}"
 INSTALL_ZEROTIER="${VISIONAI_INSTALL_ZEROTIER:-1}"
 
@@ -198,9 +198,12 @@ log "Verificando código Python..."
     "${PROJECT_ROOT}/venv/bin/python3" -m compileall -q \
         audio camera channel_id core detectors events integrations utils web main.py
 )
-ffmpeg -hide_banner -encoders 2>/dev/null | grep -q libx264 \
+FFMPEG_ENCODERS="${TEMP_DIR}/ffmpeg-encoders.txt"
+ffmpeg -hide_banner -encoders >"${FFMPEG_ENCODERS}" 2>/dev/null \
+    || fail "No fue posible consultar los codificadores de FFmpeg."
+grep -q libx264 "${FFMPEG_ENCODERS}" \
     || fail "FFmpeg no incluye libx264."
-ffmpeg -hide_banner -encoders 2>/dev/null | grep -q ' aac ' \
+grep -q ' aac ' "${FFMPEG_ENCODERS}" \
     || fail "FFmpeg no incluye AAC."
 
 systemctl daemon-reload
