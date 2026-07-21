@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 
-REF="${1:-v1.0.3-r3}"
+REF="${1:-v1.0.3-r4}"
 TEMP_FILE="$(mktemp /tmp/vision-ai-update.XXXXXX.sh)"
 trap 'rm -f -- "${TEMP_FILE}"' EXIT
 

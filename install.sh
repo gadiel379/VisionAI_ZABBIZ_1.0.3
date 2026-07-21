@@ -2,7 +2,7 @@
 set -Eeuo pipefail
 
 VERSION="${VISIONAI_VERSION:-1.0.3}"
-REF="${VISIONAI_REF:-v1.0.3-r3}"
+REF="${VISIONAI_REF:-v1.0.3-r4}"
 REPOSITORY="${VISIONAI_REPOSITORY:-gadiel379/VisionAI_ZABBIZ_1.0.3}"
 INSTALL_ZEROTIER="${VISIONAI_INSTALL_ZEROTIER:-1}"
 
@@ -45,7 +45,7 @@ log "Instalando dependencias del sistema..."
 export DEBIAN_FRONTEND=noninteractive
 apt-get update
 apt-get install -y --no-install-recommends \
-    alsa-utils ca-certificates curl ffmpeg git iproute2 \
+    acl alsa-utils ca-certificates curl ffmpeg git iproute2 \
     python3 python3-flask python3-numpy python3-opencv python3-pip \
     python3-venv python3-werkzeug python3-yaml \
     snmp snmpd sudo tesseract-ocr tesseract-ocr-spa \
@@ -130,6 +130,9 @@ fi
 
 chown -R "${TARGET_USER}:${TARGET_GROUP}" "${PROJECT_ROOT}"
 chmod 600 "${PROJECT_ROOT}/config/integrations.yaml"
+if id Debian-snmp >/dev/null 2>&1; then
+    setfacl -m "u:Debian-snmp:--x" "${TARGET_HOME}"
+fi
 
 log "Resolviendo capturadoras conectadas..."
 (

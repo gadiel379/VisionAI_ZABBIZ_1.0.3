@@ -1,5 +1,11 @@
 # Historial de cambios
 
+## 1.0.3-r4 - corrección SNMP
+
+- Devuelve OID completos en el protocolo `pass_persist` de Net-SNMP.
+- Instala ACL y permite únicamente a `Debian-snmp` atravesar el directorio del
+  usuario para ejecutar el agente de métricas.
+
 ## 1.0.3-r3 - corrección del instalador
 
 - Evita un falso negativo al verificar los codificadores libx264 y AAC con
