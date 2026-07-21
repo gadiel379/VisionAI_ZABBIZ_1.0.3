@@ -55,7 +55,7 @@ def load_values(path):
 
 def reply(oid, item):
     value_type, value = item
-    print(oid, flush=True)
+    print("." + oid.lstrip("."), flush=True)
     print(value_type, flush=True)
     print(str(value).replace("\n", " "), flush=True)
 
