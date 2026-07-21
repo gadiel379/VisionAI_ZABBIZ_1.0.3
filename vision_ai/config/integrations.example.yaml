@@ -1,6 +1,7 @@
 security:
-  username: ''
+  username: Admin
   password_hash: ''
+  superadmin_password_hash: ''
 telegram:
   enabled: false
   chat_id: ''

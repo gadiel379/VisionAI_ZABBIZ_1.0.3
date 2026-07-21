@@ -144,8 +144,9 @@ class Dashboard:
     def _default_integrations():
         return {
             "security": {
-                "username": "",
+                "username": "Admin",
                 "password_hash": "",
+                "superadmin_password_hash": "",
             },
             "telegram": {
                 "enabled": False,
@@ -202,34 +203,26 @@ class Dashboard:
         os.chmod(temporary, 0o600)
         os.replace(temporary, self.integrations_path)
 
-    def _authorize_update(self, auth, integrations):
+    def _authorize_admin(self, auth, integrations):
         username = str((auth or {}).get("username", "")).strip()
         password = str((auth or {}).get("password", ""))
         security = integrations["security"]
-        stored_user = security.get("username", "")
         stored_hash = security.get("password_hash", "")
-        if not stored_user or not stored_hash:
-            if not username or len(password) < 8:
-                return False, "Primera configuración: define un usuario y una contraseña de mínimo 8 caracteres."
-            security["username"] = username
-            security["password_hash"] = generate_password_hash(password)
-            return True, "Credenciales administrativas creadas."
-        if username != stored_user or not check_password_hash(stored_hash, password):
+        if not stored_hash:
+            return False, "Admin todavía no está configurado. Usa la pestaña Seguridad."
+        if username != "Admin" or not check_password_hash(stored_hash, password):
             return False, "Usuario o contraseña incorrectos."
         return True, "Autorización correcta."
 
-    @staticmethod
-    def _authorize_telegram_update(auth):
-        username = str(
-            (auth or {}).get("username", "")
-        )
-        password = str(
-            (auth or {}).get("password", "")
-        )
-
-        if username != "Admin" or password != "admin":
+    def _authorize_superadmin(self, auth, integrations):
+        username = str((auth or {}).get("username", "")).strip()
+        password = str((auth or {}).get("password", ""))
+        security = integrations["security"]
+        stored_hash = security.get("superadmin_password_hash", "")
+        if not stored_hash:
+            return False, "SuperAdmin no está configurado en esta Raspberry."
+        if username != "SuperAdmin" or not check_password_hash(stored_hash, password):
             return False, "Usuario o contraseña incorrectos."
-
         return True, "Autorización correcta."
 
     @staticmethod
@@ -1116,7 +1109,9 @@ class Dashboard:
                 return jsonify({"ok": False, "message": "Acceso no autorizado"}), 403
             payload = request.get_json(silent=True) or {}
             integrations = self._load_integrations()
-            authorized, message = self._authorize_telegram_update(payload.get("auth"))
+            authorized, message = self._authorize_admin(
+                payload.get("auth"), integrations
+            )
             if not authorized:
                 return jsonify({"ok": False, "message": message}), 401
             telegram = payload.get("telegram") or {}
@@ -1167,14 +1162,14 @@ class Dashboard:
                 return jsonify({"ok": False, "message": "Acceso no autorizado"}), 403
 
             payload = request.get_json(silent=True) or {}
-            authorized, message = self._authorize_telegram_update(
-                payload.get("auth")
+            integrations = self._load_integrations()
+            authorized, message = self._authorize_admin(
+                payload.get("auth"), integrations
             )
 
             if not authorized:
                 return jsonify({"ok": False, "message": message}), 401
 
-            integrations = self._load_integrations()
             current = integrations.get(
                 "vpn",
                 VpnManager.defaults(),
@@ -1208,7 +1203,9 @@ class Dashboard:
                 return jsonify({"ok": False, "message": "Acceso no autorizado"}), 403
             payload = request.get_json(silent=True) or {}
             integrations = self._load_integrations()
-            authorized, message = self._authorize_update(payload.get("auth"), integrations)
+            authorized, message = self._authorize_admin(
+                payload.get("auth"), integrations
+            )
             if not authorized:
                 return jsonify({"ok": False, "message": message}), 401
             network_payload = payload.get("network") or {}
@@ -1286,6 +1283,76 @@ class Dashboard:
                     "Configuración de Red y SNMP aplicada. "
                     + apply_message
                 ),
+            })
+
+        @self.app.route("/api/config/security/change-admin", methods=["POST"])
+        def change_admin_password():
+            if not self._request_is_local():
+                return jsonify({"ok": False, "message": "Acceso no autorizado"}), 403
+            payload = request.get_json(silent=True) or {}
+            integrations = self._load_integrations()
+            admin_configured = bool(
+                integrations["security"].get("password_hash")
+            )
+            if admin_configured:
+                authorized, message = self._authorize_admin(
+                    payload.get("auth"), integrations
+                )
+                if not authorized:
+                    return jsonify({"ok": False, "message": message}), 401
+            new_password = str(payload.get("new_password", ""))
+            confirmation = str(payload.get("confirmation", ""))
+            if len(new_password) < 6:
+                return jsonify({
+                    "ok": False,
+                    "message": "La nueva contraseña debe tener mínimo 6 caracteres.",
+                }), 400
+            if new_password != confirmation:
+                return jsonify({
+                    "ok": False,
+                    "message": "La confirmación de contraseña no coincide.",
+                }), 400
+            integrations["security"]["username"] = "Admin"
+            integrations["security"]["password_hash"] = generate_password_hash(
+                new_password
+            )
+            self._save_integrations(integrations)
+            return jsonify({
+                "ok": True,
+                "message": "Contraseña de Admin actualizada correctamente.",
+            })
+
+        @self.app.route("/api/config/security/reset-admin", methods=["POST"])
+        def reset_admin_password():
+            if not self._request_is_local():
+                return jsonify({"ok": False, "message": "Acceso no autorizado"}), 403
+            payload = request.get_json(silent=True) or {}
+            integrations = self._load_integrations()
+            authorized, message = self._authorize_superadmin(
+                payload.get("auth"), integrations
+            )
+            if not authorized:
+                return jsonify({"ok": False, "message": message}), 401
+            new_password = str(payload.get("new_password", ""))
+            confirmation = str(payload.get("confirmation", ""))
+            if len(new_password) < 6:
+                return jsonify({
+                    "ok": False,
+                    "message": "La nueva contraseña de Admin debe tener mínimo 6 caracteres.",
+                }), 400
+            if new_password != confirmation:
+                return jsonify({
+                    "ok": False,
+                    "message": "La confirmación de contraseña no coincide.",
+                }), 400
+            integrations["security"]["username"] = "Admin"
+            integrations["security"]["password_hash"] = generate_password_hash(
+                new_password
+            )
+            self._save_integrations(integrations)
+            return jsonify({
+                "ok": True,
+                "message": "SuperAdmin restableció la contraseña de Admin.",
             })
 
         @self.app.route("/api/config/network", methods=["POST"])

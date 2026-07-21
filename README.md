@@ -40,7 +40,7 @@ capturadoras e inicia el dashboard.
 Al finalizar muestra una dirección similar a:
 
 ```text
-http://192.168.1.66:5000
+http://IP_DE_LA_RASPBERRY:5000
 ```
 
 ## Configuración posterior
@@ -53,6 +53,16 @@ capturarse los valores propios del sitio:
 2. Servidor, comunidad y puertos SNMPv2c.
 3. Token, chat ID y horarios de Telegram.
 4. Network ID de ZeroTier o archivo de WireGuard.
+
+Configura la contraseña local de recuperación de SuperAdmin en cada Raspberry:
+
+```bash
+~/vision_ai/venv/bin/python ~/vision_ai/scripts/security_setup.py
+```
+
+La contraseña se captura de forma oculta y solo se guarda su hash. SuperAdmin
+únicamente puede restablecer la contraseña de Admin desde
+`CONFIGURACIÓN > SEGURIDAD`.
 
 Las credenciales se guardan únicamente en:
 
