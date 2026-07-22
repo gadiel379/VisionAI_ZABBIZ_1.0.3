@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+"""Backend pass_persist del árbol SNMP de Vision AI."""
+
 import json
 import sys
 import time
@@ -8,10 +10,44 @@ from pathlib import Path
 
 
 BASE = "1.3.6.1.4.1.8072.9999.1"
+CAPTURE_FIELDS = (
+    ("station_id", "string"),
+    ("name", "string"),
+    ("channel", "string"),
+    ("location", "string"),
+    ("enabled", "integer"),
+    ("status", "integer"),
+    ("black", "integer"),
+    ("no_audio", "integer"),
+    ("digitalization", "integer"),
+    ("frozen", "integer"),
+    ("channel_id", "integer"),
+)
 
 
 def oid_key(oid):
     return tuple(int(part) for part in oid.strip(".").split("."))
+
+
+def _capture_values(data, capture_number, stale):
+    capture_id = f"capture_{capture_number}"
+    capture = (data.get("captures", {}) or {}).get(capture_id, {}) or {}
+    enabled = int(capture.get("enabled", 0) or 0)
+
+    if stale:
+        capture = dict(capture)
+        capture["status"] = 1 if enabled else 0
+        for field in ("black", "no_audio", "digitalization", "frozen", "channel_id"):
+            capture[field] = 0
+
+    values = {}
+    for field_number, (field_name, value_type) in enumerate(CAPTURE_FIELDS, 1):
+        default = "" if value_type == "string" else 0
+        values[f"{BASE}.2.{capture_number}.{field_number}"] = (
+            value_type,
+            capture.get(field_name, default),
+        )
+    return values
 
 
 def load_values(path):
@@ -19,15 +55,12 @@ def load_values(path):
         data = json.loads(Path(path).read_text(encoding="utf-8"))
     except (OSError, ValueError, TypeError):
         data = {}
+
     updated_epoch = int(data.get("updated_epoch", 0) or 0)
     stale = not updated_epoch or time.time() - updated_epoch > 15.0
-    if stale:
-        data["service_status"] = 0
-        data["capture_1_state"] = 4
-        data["capture_2_state"] = 4
-    event = data.get("last_event", {}) or {}
+
     values = {
-        BASE + ".1.1": ("integer", data.get("service_status", 0)),
+        BASE + ".1.1": ("integer", 0 if stale else data.get("service_status", 0)),
         BASE + ".1.2": ("integer", data.get("cpu_basis_points", 0)),
         BASE + ".1.3": ("integer", data.get("ram_basis_points", 0)),
         BASE + ".1.4": ("integer", data.get("temperature_decicelsius", 0)),
@@ -35,21 +68,9 @@ def load_values(path):
         BASE + ".1.6": ("integer", data.get("disk_total_mb", 0)),
         BASE + ".1.7": ("integer", data.get("disk_free_mb", 0)),
         BASE + ".1.8": ("integer", data.get("updated_epoch", 0)),
-        BASE + ".2.1": ("integer", data.get("capture_1_state", 0)),
-        BASE + ".2.2": ("integer", data.get("capture_2_state", 0)),
-        BASE + ".3.1": ("string", event.get("event_id", "")),
-        BASE + ".3.2": ("integer", event.get("state", 0)),
-        BASE + ".3.3": ("integer", event.get("type_code", 0)),
-        BASE + ".3.4": ("string", event.get("type_name", "")),
-        BASE + ".3.5": ("string", event.get("channel", "")),
-        BASE + ".3.6": ("string", event.get("station_id", "")),
-        BASE + ".3.7": ("string", event.get("virtual_channel", "")),
-        BASE + ".3.8": ("string", event.get("capture_id", "")),
-        BASE + ".3.9": ("string", event.get("started_at", "")),
-        BASE + ".3.10": ("string", event.get("ended_at", "")),
-        BASE + ".3.11": ("integer", event.get("duration_centiseconds", 0)),
-        BASE + ".3.12": ("integer", event.get("event_epoch", 0)),
     }
+    values.update(_capture_values(data, 1, stale))
+    values.update(_capture_values(data, 2, stale))
     return values
 
 
@@ -92,7 +113,10 @@ def main():
 
         requested_key = oid_key(requested)
         candidates = sorted(values, key=oid_key)
-        selected = next((oid for oid in candidates if oid_key(oid) > requested_key), None)
+        selected = next(
+            (oid for oid in candidates if oid_key(oid) > requested_key),
+            None,
+        )
         if selected is None:
             print("NONE", flush=True)
         else:

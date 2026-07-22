@@ -57,6 +57,7 @@ class LiveHlsStreamer:
         )
 
         self.frame_lock = threading.Lock()
+        self.lifecycle_lock = threading.RLock()
         self.latest_frame = None
 
         self.running = False
@@ -68,6 +69,9 @@ class LiveHlsStreamer:
         self.pipe_directory = None
         self.video_pipe = None
         self.audio_pipe = None
+        self.generation = 0
+        self.first_start = True
+        self.session_stop_event = None
 
     def update_frame(self, frame):
 
@@ -90,7 +94,22 @@ class LiveHlsStreamer:
         with self.frame_lock:
             self.latest_frame = frame.copy()
 
+    def clear_frame(self):
+
+        with self.frame_lock:
+            self.latest_frame = None
+
+    def has_frame(self):
+
+        with self.frame_lock:
+            return self.latest_frame is not None
+
     def start(self):
+
+        with self.lifecycle_lock:
+            self._start_locked()
+
+    def _start_locked(self):
 
         if self.running:
             return
@@ -102,7 +121,14 @@ class LiveHlsStreamer:
             exist_ok=True
         )
 
-        self._clean_output()
+        if self.first_start:
+            self._clean_output()
+            self.first_start = False
+
+        self.generation += 1
+        generation = self.generation
+        session_stop_event = threading.Event()
+        self.session_stop_event = session_stop_event
 
         self.pipe_directory = Path(
             tempfile.mkdtemp(
@@ -130,7 +156,7 @@ class LiveHlsStreamer:
 
         segment_pattern = str(
             self.output_directory
-            / "live_%06d.ts"
+            / f"live_g{generation}_%06d.ts"
         )
 
         command = [
@@ -205,10 +231,15 @@ class LiveHlsStreamer:
             "1",
             "-hls_list_size",
             "4",
+            "-hls_start_number_source",
+            "epoch",
             "-hls_delete_threshold",
             "2",
             "-hls_flags",
-            "delete_segments+independent_segments+program_date_time+temp_file",
+            (
+                "delete_segments+independent_segments+program_date_time+"
+                "temp_file+discont_start"
+            ),
             "-hls_segment_filename",
             segment_pattern,
             str(playlist)
@@ -236,6 +267,11 @@ class LiveHlsStreamer:
                 os.O_RDWR
             )
 
+            # El cursor se fija cuando las dos entradas de la nueva sesion
+            # ya estan abiertas. De esta forma nunca se vuelca en FFmpeg el
+            # audio acumulado mientras se cerraba la generacion anterior.
+            audio_start_timestamp = time.time()
+
         except (OSError, FileNotFoundError) as error:
 
             print(
@@ -249,20 +285,33 @@ class LiveHlsStreamer:
         self.threads = [
             threading.Thread(
                 target=self._video_loop,
+                args=(session_stop_event, self.video_fd),
                 daemon=True
             ),
             threading.Thread(
                 target=self._audio_loop,
+                args=(
+                    session_stop_event,
+                    self.audio_fd,
+                    audio_start_timestamp,
+                ),
                 daemon=True
             ),
             threading.Thread(
                 target=self._monitor_loop,
+                args=(session_stop_event, self.process, generation),
                 daemon=True
             )
         ]
 
         for thread in self.threads:
             thread.start()
+
+        threading.Thread(
+            target=self._cleanup_previous_generations,
+            args=(generation,),
+            daemon=True,
+        ).start()
 
         print(
             "[LIVE HLS] Transmisión A/V iniciada "
@@ -275,12 +324,18 @@ class LiveHlsStreamer:
         )
 
     @staticmethod
-    def _write_all(file_descriptor, data):
+    def _write_all(file_descriptor, data, session_stop_event=None):
 
         view = memoryview(data)
         written = 0
 
         while written < len(view):
+
+            if (
+                session_stop_event is not None
+                and session_stop_event.is_set()
+            ):
+                raise BrokenPipeError("Sesion HLS cerrada")
 
             count = os.write(
                 file_descriptor,
@@ -294,12 +349,12 @@ class LiveHlsStreamer:
 
             written += count
 
-    def _video_loop(self):
+    def _video_loop(self, session_stop_event, video_fd):
 
         interval = 1.0 / self.fps
         deadline = time.monotonic()
 
-        while self.running:
+        while not session_stop_event.is_set():
 
             with self.frame_lock:
                 frame = (
@@ -316,8 +371,9 @@ class LiveHlsStreamer:
 
             try:
                 self._write_all(
-                    self.video_fd,
-                    frame.tobytes()
+                    video_fd,
+                    frame.tobytes(),
+                    session_stop_event,
                 )
             except (OSError, BrokenPipeError):
                 break
@@ -333,11 +389,16 @@ class LiveHlsStreamer:
             else:
                 deadline = time.monotonic()
 
-    def _audio_loop(self):
+    def _audio_loop(
+        self,
+        session_stop_event,
+        audio_fd,
+        audio_start_timestamp,
+    ):
 
-        last_timestamp = time.time()
+        last_timestamp = float(audio_start_timestamp)
 
-        while self.running:
+        while not session_stop_event.is_set():
 
             if self.audio_buffer is None:
                 time.sleep(0.05)
@@ -356,13 +417,14 @@ class LiveHlsStreamer:
 
             for timestamp, data in chunks:
 
-                if not self.running:
+                if session_stop_event.is_set():
                     break
 
                 try:
                     self._write_all(
-                        self.audio_fd,
-                        data
+                        audio_fd,
+                        data,
+                        session_stop_event,
                     )
                 except (
                     OSError,
@@ -375,21 +437,25 @@ class LiveHlsStreamer:
                     float(timestamp)
                 )
 
-    def _monitor_loop(self):
+    def _monitor_loop(self, session_stop_event, process, generation):
 
-        while self.running:
+        while not session_stop_event.is_set():
 
             if (
-                self.process is not None
-                and self.process.poll()
+                process is not None
+                and process.poll()
                 is not None
             ):
 
                 print(
                     "[LIVE HLS] FFmpeg terminó "
-                    f"con código {self.process.returncode}"
+                    f"con código {process.returncode} "
+                    f"en generacion {generation}"
                 )
-                self.running = False
+                session_stop_event.set()
+                with self.lifecycle_lock:
+                    if self.process is process:
+                        self.running = False
                 break
 
             time.sleep(1.0)
@@ -399,6 +465,8 @@ class LiveHlsStreamer:
         for pattern in (
             "live_*.ts",
             "live_*.ts.tmp",
+            "live_g*.ts",
+            "live_g*.ts.tmp",
             "stream.m3u8",
             "stream.m3u8.tmp"
         ):
@@ -414,9 +482,54 @@ class LiveHlsStreamer:
                 except OSError:
                     pass
 
+    def _cleanup_previous_generations(self, generation):
+
+        playlist = self.output_directory / "stream.m3u8"
+        marker = f"live_g{generation}_"
+        deadline = time.monotonic() + 5.0
+
+        while self.running and time.monotonic() < deadline:
+            try:
+                if marker in playlist.read_text(encoding="utf-8"):
+                    break
+            except OSError:
+                pass
+            time.sleep(0.1)
+        else:
+            return
+
+        for path in self.output_directory.glob("live_g*.ts*"):
+            if marker in path.name:
+                continue
+            try:
+                path.unlink()
+            except OSError:
+                pass
+
+    def restart(self):
+
+        with self.lifecycle_lock:
+            self._stop_locked()
+            self._start_locked()
+
+        print(
+            "[LIVE HLS] Nueva linea de tiempo A/V iniciada "
+            "despues de reconexion USB"
+        )
+
     def stop(self):
 
+        with self.lifecycle_lock:
+            self._stop_locked()
+
+    def _stop_locked(self):
+
         self.running = False
+
+        session_stop_event = self.session_stop_event
+        self.session_stop_event = None
+        if session_stop_event is not None:
+            session_stop_event.set()
 
         for file_descriptor_name in (
             "video_fd",
@@ -455,6 +568,16 @@ class LiveHlsStreamer:
                 self.process.wait()
 
         self.process = None
+
+        old_threads = self.threads
+        self.threads = []
+
+        current_thread = threading.current_thread()
+        for thread in old_threads:
+            if thread is current_thread:
+                continue
+            if thread.is_alive():
+                thread.join(timeout=2)
 
         if self.pipe_directory is not None:
             shutil.rmtree(
