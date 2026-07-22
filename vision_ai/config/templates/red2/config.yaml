@@ -1,6 +1,6 @@
-name: RED5
-station_id: XHMEN-TDT
-virtual_channel: '5.1'
+name: RED2
+station_id: XHTP-TDT
+virtual_channel: '2.1'
 location: Merida, Yucatan.
 template_threshold: 0.62
 confirmation_seconds: 0.5

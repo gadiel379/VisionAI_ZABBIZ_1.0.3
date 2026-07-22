@@ -306,10 +306,32 @@
 <script src="/static/hls.min.js"></script>
 <script>
 const $=id=>document.getElementById(id);const history={uptime1:[],uptime2:[],temp:[]};const EVENTS_PER_PAGE=100;let pendingPowerAction=null;let loadedConfig=null;let latestConfig=null;let captureHardware=[];let videoPaused={1:false,2:false};let loadedEvents=[];let mediaEventsPage=1;let deliveryEventsPage=1;let liveHls={1:null,2:null};let liveRetryTimer={1:null,2:null};
+const liveState={
+    1:{generation:0,lastTime:-1,lastProgressAt:Date.now(),startedAt:0,recoveries:0},
+    2:{generation:0,lastTime:-1,lastProgressAt:Date.now(),startedAt:0,recoveries:0}
+};
+
+function scheduleLiveRecovery(number,delay=1000,reason='reconexion'){
+    if(liveRetryTimer[number]||videoPaused[number])return;
+    liveRetryTimer[number]=setTimeout(()=>{
+        liveRetryTimer[number]=null;
+        console.info('[DASHBOARD HLS] Reconstruyendo capturadora '+number+': '+reason);
+        initLivePlayer(number,true);
+    },delay);
+}
 
 function initLivePlayer(number,force=false){
     const video=$('video'+number);
     if(!video)return;
+
+    const state=liveState[number];
+    const wasMuted=video.muted;
+    state.generation+=1;
+    const generation=state.generation;
+    state.startedAt=Date.now();
+    state.lastProgressAt=state.startedAt;
+    state.lastTime=-1;
+    if(force)state.recoveries+=1;
 
     if(liveRetryTimer[number]){
         clearTimeout(liveRetryTimer[number]);
@@ -321,10 +343,15 @@ function initLivePlayer(number,force=false){
         liveHls[number]=null;
     }
 
-    const source='/live/capture_'+number+'/stream.m3u8?refresh='+Date.now();
+    video.pause();
+    video.removeAttribute('src');
+    video.load();
+    video.muted=wasMuted;
+
+    const source='/live/capture_'+number+'/stream.m3u8?generation='+generation+'&refresh='+Date.now();
 
     if(window.Hls&&Hls.isSupported()){
-        liveHls[number]=new Hls({
+        const player=new Hls({
             lowLatencyMode:true,
             liveSyncDurationCount:2,
             liveMaxLatencyDurationCount:4,
@@ -334,29 +361,61 @@ function initLivePlayer(number,force=false){
             enableWorker:true
         });
 
-        liveHls[number].attachMedia(video);
-        liveHls[number].on(Hls.Events.MEDIA_ATTACHED,()=>liveHls[number].loadSource(source));
-        liveHls[number].on(Hls.Events.MANIFEST_PARSED,()=>video.play().catch(()=>{}));
-        liveHls[number].on(Hls.Events.ERROR,(_,data)=>{
-            if(!data.fatal)return;
+        liveHls[number]=player;
+        player.attachMedia(video);
+        player.on(Hls.Events.MEDIA_ATTACHED,()=>{
+            if(liveHls[number]===player)player.loadSource(source);
+        });
+        player.on(Hls.Events.MANIFEST_PARSED,()=>{
+            if(liveHls[number]!==player)return;
+            state.lastProgressAt=Date.now();
+            if(!videoPaused[number])video.play().catch(()=>{});
+        });
+        player.on(Hls.Events.FRAG_LOADED,()=>{
+            if(liveHls[number]===player)state.lastProgressAt=Date.now();
+        });
+        player.on(Hls.Events.ERROR,(_,data)=>{
+            if(liveHls[number]!==player||!data.fatal)return;
+            console.warn('[DASHBOARD HLS] Error capturadora '+number,data.type,data.details);
             if(data.type===Hls.ErrorTypes.NETWORK_ERROR){
-                liveHls[number].startLoad();
+                scheduleLiveRecovery(number,1200,'error de red '+data.details);
                 return;
             }
             if(data.type===Hls.ErrorTypes.MEDIA_ERROR){
-                liveHls[number].recoverMediaError();
+                player.recoverMediaError();
+                scheduleLiveRecovery(number,3000,'error de reproducción '+data.details);
                 return;
             }
-            liveHls[number].destroy();
-            liveHls[number]=null;
-            liveRetryTimer[number]=setTimeout(()=>initLivePlayer(number,true),2000);
+            scheduleLiveRecovery(number,1200,'error fatal '+data.details);
         });
         return;
     }
 
     if(video.canPlayType('application/vnd.apple.mpegurl')){
         video.src=source;
-        video.play().catch(()=>{});
+        video.addEventListener('error',()=>scheduleLiveRecovery(number,1500,'error HLS nativo'),{once:true});
+        if(!videoPaused[number])video.play().catch(()=>{});
+    }
+}
+
+function superviseLivePlayer(number){
+    const video=$('video'+number);
+    const state=liveState[number];
+    if(!video||videoPaused[number]||document.hidden)return;
+
+    const now=Date.now();
+    const current=Number(video.currentTime)||0;
+    if(current>state.lastTime+0.05){
+        state.lastTime=current;
+        state.lastProgressAt=now;
+        return;
+    }
+
+    // Se da margen al arranque y a una reconexión física completa. Si la
+    // línea de tiempo no avanza, se reconstruye solo este reproductor.
+    if(now-state.startedAt>8000&&now-state.lastProgressAt>6500){
+        state.lastProgressAt=now;
+        scheduleLiveRecovery(number,250,'línea HLS sin avance');
     }
 }
 
@@ -699,6 +758,14 @@ function openAboutModal(){$('aboutModal').classList.add('show')}
 function closeAboutModal(){$('aboutModal').classList.remove('show')}
 document.addEventListener('keydown',event=>{if(event.key==='Escape')closeAboutModal()})
 function openPowerModal(a){pendingPowerAction=a;$('powerTitle').textContent=a==='reboot'?'Reiniciar Raspberry Pi':'Apagar Raspberry Pi';$('powerText').textContent=a==='reboot'?'El monitoreo se detendrá temporalmente y la Raspberry Pi se reiniciará.':'El monitoreo se detendrá y será necesario encender físicamente la Raspberry Pi.';$('powerModal').classList.add('show')}function closePowerModal(){$('powerModal').classList.remove('show');pendingPowerAction=null}async function executePowerAction(){if(!pendingPowerAction)return;const r=await fetch(pendingPowerAction==='reboot'?'/system/reboot':'/system/shutdown',{method:'POST'});const d=await r.json();$('powerText').textContent=d.message;if(d.ok)setTimeout(closePowerModal,2500)}
-loadConfig();refreshStatus();refreshAudio(1);refreshAudio(2);initLivePlayer(1);initLivePlayer(2);tick();setInterval(refreshStatus,3000);setInterval(()=>{refreshAudio(1);refreshAudio(2)},500);setInterval(()=>{keepLiveEdge(1);keepLiveEdge(2)},2000);setInterval(tick,1000);
+document.addEventListener('visibilitychange',()=>{
+    if(!document.hidden){
+        liveState[1].lastProgressAt=Date.now();
+        liveState[2].lastProgressAt=Date.now();
+        superviseLivePlayer(1);
+        superviseLivePlayer(2);
+    }
+});
+loadConfig();refreshStatus();refreshAudio(1);refreshAudio(2);initLivePlayer(1);initLivePlayer(2);tick();setInterval(refreshStatus,3000);setInterval(()=>{refreshAudio(1);refreshAudio(2)},500);setInterval(()=>{keepLiveEdge(1);keepLiveEdge(2)},2000);setInterval(()=>{superviseLivePlayer(1);superviseLivePlayer(2)},1000);setInterval(tick,1000);
 </script>
 </body></html>
